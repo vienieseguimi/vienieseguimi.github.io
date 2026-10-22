@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vieni e seguimi — iscrizioni ai pellegrinaggi</title>
+<meta name="description" content="Vieni e seguimi: iscrizioni ai pellegrinaggi della parrocchia.">
+<meta property="og:title" content="Vieni e seguimi — iscrizioni ai pellegrinaggi">
+<meta property="og:description" content="Compila il modulo per iscriverti. Ricevi subito un'email di conferma della ricezione.">
+<!-- Su GitHub Pages di progetto: basePath = '/nome-repo' (stesso valore in config.js). -->
+<script>window.PELLEGRINAGGIO_BOOT = { basePath: '' };</script>
+<script>
+(function (b) {
+  b = String(b || '').replace(/\/$/, '');
+  document.write('<base href="' + location.origin + (b || '') + '/">');
+})(window.PELLEGRINAGGIO_BOOT.basePath);
+</script>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/iscrizione.css">
+</head>
+<body>
+
+<!-- Home: elenco pellegrinaggi aperti -->
+<div id="vista-home" hidden>
+  <header class="testata">
+    <div class="colonna">
+      <p class="parrocchia" id="home-parrocchia">Vieni e seguimi</p>
+      <h1>Iscrizioni</h1>
+      <p class="meta-home">Scegli il pellegrinaggio a cui vuoi iscriverti.</p>
+    </div>
+  </header>
+  <main class="colonna" id="elenco-edizioni">
+    <p class="caricamento-home" id="home-caricamento">Caricamento…</p>
+    <div id="home-lista" class="lista-edizioni" hidden></div>
+    <div id="home-vuoto" class="avviso" hidden>
+      <h2>Nessun pellegrinaggio aperto</h2>
+      <p>Al momento non ci sono pellegrinaggi con iscrizioni aperte. Riprova più tardi oppure contatta la segreteria.</p>
+    </div>
+    <div id="home-errore" class="avviso" hidden>
+      <h2>Non riusciamo a caricare l’elenco</h2>
+      <p>Controlla la connessione e ricarica la pagina.</p>
+    </div>
+  </main>
+  <footer class="piede">
+    <div class="colonna piede-interno">
+      <div class="piede-blocco">
+        <p class="piede-etichetta">Segreteria</p>
+        <p><a href="segreteria.html">Accesso al pannello segreteria</a></p>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- Modulo iscrizione per un pellegrinaggio -->
+<div id="vista-modulo" hidden>
+<header class="testata">
+  <div class="colonna testata-griglia">
+    <a class="testata-indietro" id="link-home-testata" href="/">← Tutti i pellegrinaggi</a>
+    <div class="testata-titoli">
+      <h1>
+        <span class="meta" data-evento="meta"></span>
+        <span class="titolo-evento" data-evento="titolo"></span>
+      </h1>
+    </div>
+    <dl class="fatti">
+      <div><dt>Quando</dt><dd data-evento="quando"></dd></div>
+      <div><dt>Quota</dt><dd data-evento="quota"></dd></div>
+      <div><dt>Iscrizioni</dt><dd data-evento="scadenza"></dd></div>
+    </dl>
+  </div>
+</header>
+
+<main class="colonna" id="contenuto">
+
+  <div id="chiuse" class="avviso" hidden>
+    <h2>Le iscrizioni sono chiuse</h2>
+    <p>Per informazioni contatta <span data-evento="contatto"></span>.</p>
+    <p><a id="link-altre" href="/">Altri pellegrinaggi</a></p>
+  </div>
+
+  <div id="edizione-mancante" class="avviso" hidden>
+    <h2>Pellegrinaggio non trovato</h2>
+    <p>Controlla il link oppure torna all’elenco.</p>
+    <p><a id="link-home-mancante" href="/">Torna all’elenco</a></p>
+  </div>
+
+  <form id="modulo" novalidate hidden>
+    <div class="modulo-guida">
+      <p class="intro">Compila in <strong class="accento">4 passi</strong>. Ricevi subito un’email; la segreteria ti riscrive quando l’iscrizione è confermata.</p>
+
+      <nav class="stepper" aria-label="Passi dell’iscrizione">
+        <ol class="stepper-lista" id="stepper">
+          <li class="stepper-voce" data-step="0" aria-current="step">
+            <button type="button" class="stepper-btn" data-vai="0" disabled>
+              <span class="stepper-num">1</span>
+              <span class="stepper-label">Persona</span>
+            </button>
+          </li>
+          <li class="stepper-voce" data-step="1">
+            <button type="button" class="stepper-btn" data-vai="1" disabled>
+              <span class="stepper-num">2</span>
+              <span class="stepper-label">Contatti</span>
+            </button>
+          </li>
+          <li class="stepper-voce" data-step="2">
+            <button type="button" class="stepper-btn" data-vai="2" disabled>
+              <span class="stepper-num">3</span>
+              <span class="stepper-label">Camera</span>
+            </button>
+          </li>
+          <li class="stepper-voce" data-step="3">
+            <button type="button" class="stepper-btn" data-vai="3" disabled>
+              <span class="stepper-num">4</span>
+              <span class="stepper-label">Invio</span>
+            </button>
+          </li>
+        </ol>
+      </nav>
+    </div>
+
+    <div class="modulo-corpo">
+    <div id="riepilogo-errori" class="riepilogo-errori" tabindex="-1" hidden>
+      <h2>Mancano alcune informazioni</h2>
+      <ul></ul>
+    </div>
+
+    <div class="passi">
+      <fieldset class="gruppo passo-pannello" data-passo="0">
+        <legend><h2>Chi partecipa</h2></legend>
+
+        <div class="campi-riga">
+          <div class="campo" data-campo="nome">
+            <label for="nome">Nome</label>
+            <p class="messaggio-errore" id="nome-errore"></p>
+            <input type="text" id="nome" name="nome" autocomplete="given-name" maxlength="80" required aria-describedby="nome-errore">
+          </div>
+
+          <div class="campo" data-campo="cognome">
+            <label for="cognome">Cognome</label>
+            <p class="messaggio-errore" id="cognome-errore"></p>
+            <input type="text" id="cognome" name="cognome" autocomplete="family-name" maxlength="80" required aria-describedby="cognome-errore">
+          </div>
+        </div>
+
+        <div class="campo" data-campo="data_nascita">
+          <label for="data_nascita_vista">Data di nascita</label>
+          <span class="aiuto" id="data-aiuto">gg/mm/aaaa · oppure usa il calendario</span>
+          <p class="messaggio-errore" id="data_nascita-errore"></p>
+          <div class="data-picker">
+            <input type="text" id="data_nascita_vista" inputmode="numeric" autocomplete="bday"
+              placeholder="gg/mm/aaaa" maxlength="10" class="data-picker-testo"
+              aria-describedby="data-aiuto data_nascita-errore" required>
+            <label class="data-picker-trigger" for="data_nascita" title="Apri il calendario">
+              <span class="visually-hidden">Apri il calendario</span>
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                <rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                <path d="M3 10h18M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <input type="date" id="data_nascita" name="data_nascita" class="data-picker-nativo"
+                lang="it" min="1900-01-01">
+            </label>
+          </div>
+        </div>
+
+        <div class="campo" data-campo="tutore" id="campo-tutore" hidden>
+          <label for="tutore">Nome e cognome di un genitore o tutore</label>
+          <span class="aiuto">Chi partecipa è minorenne: serve un adulto di riferimento.</span>
+          <p class="messaggio-errore" id="tutore-errore"></p>
+          <input type="text" id="tutore" name="tutore" maxlength="120" aria-describedby="tutore-errore">
+        </div>
+      </fieldset>
+
+      <fieldset class="gruppo passo-pannello" data-passo="1" hidden>
+        <legend><h2>Come contattarti</h2></legend>
+
+        <div class="campo" data-campo="email">
+          <label for="email">Email</label>
+          <span class="aiuto">Qui arrivano la ricevuta e la conferma.</span>
+          <p class="messaggio-errore" id="email-errore"></p>
+          <input type="email" id="email" name="email" autocomplete="email" maxlength="120" required aria-describedby="email-errore" spellcheck="false">
+        </div>
+
+        <div class="campi-riga">
+          <div class="campo" data-campo="telefono">
+            <label for="telefono">Telefono</label>
+            <p class="messaggio-errore" id="telefono-errore"></p>
+            <input type="tel" id="telefono" name="telefono" autocomplete="tel" maxlength="30" required aria-describedby="telefono-errore">
+          </div>
+
+          <div class="campo" data-campo="comune">
+            <label for="comune">Comune</label>
+            <p class="messaggio-errore" id="comune-errore"></p>
+            <input type="text" id="comune" name="comune" autocomplete="address-level2" maxlength="80" required aria-describedby="comune-errore">
+          </div>
+        </div>
+
+        <div class="campo" data-campo="indirizzo">
+          <label for="indirizzo">Indirizzo di residenza</label>
+          <span class="aiuto">Via e numero civico. Serve alla segreteria per verificare l’appartenenza alla parrocchia.</span>
+          <p class="messaggio-errore" id="indirizzo-errore"></p>
+          <input type="text" id="indirizzo" name="indirizzo" autocomplete="street-address" maxlength="150" required aria-describedby="indirizzo-errore">
+        </div>
+
+        <fieldset class="campo scelta" data-campo="parrocchiano_dichiarato" aria-describedby="parrocchiano_dichiarato-errore">
+          <legend>Fai parte della nostra parrocchia?</legend>
+          <p class="messaggio-errore" id="parrocchiano_dichiarato-errore"></p>
+          <div class="opzioni in-riga">
+            <label class="opzione"><input type="radio" name="parrocchiano_dichiarato" value="si"> Sì</label>
+            <label class="opzione"><input type="radio" name="parrocchiano_dichiarato" value="no"> No</label>
+            <label class="opzione"><input type="radio" name="parrocchiano_dichiarato" value="non_so"> Non lo so</label>
+          </div>
+        </fieldset>
+      </fieldset>
+
+      <fieldset class="gruppo passo-pannello" data-passo="2" hidden>
+        <legend><h2>Sistemazione</h2></legend>
+
+        <fieldset class="campo scelta" data-campo="sistemazione" aria-describedby="sistemazione-errore">
+          <legend>Che camera preferisci?</legend>
+          <span class="aiuto">La segreteria farà il possibile per rispettare la preferenza.</span>
+          <p class="messaggio-errore" id="sistemazione-errore"></p>
+          <div class="opzioni">
+            <label class="opzione"><input type="radio" name="sistemazione" value="doppia"> Camera doppia</label>
+            <label class="opzione"><input type="radio" name="sistemazione" value="singola"> <span>Camera singola <span class="aiuto-inline">· con supplemento</span></span></label>
+            <label class="opzione"><input type="radio" name="sistemazione" value="tripla"> Camera tripla</label>
+            <label class="opzione"><input type="radio" name="sistemazione" value="indifferente"> Per me è indifferente</label>
+          </div>
+        </fieldset>
+
+        <div class="campo" data-campo="compagno_camera">
+          <label for="compagno_camera">Con chi vuoi dividere la camera? <span class="facoltativo">(facoltativo)</span></label>
+          <span class="aiuto">Anche l’altra persona deve compilare il suo modulo.</span>
+          <p class="messaggio-errore" id="compagno_camera-errore"></p>
+          <input type="text" id="compagno_camera" name="compagno_camera" maxlength="150" aria-describedby="compagno_camera-errore">
+        </div>
+
+        <div class="campo" data-campo="esigenze">
+          <label for="esigenze">Esigenze alimentari o di mobilità <span class="facoltativo">(facoltativo)</span></label>
+          <span class="aiuto">Per esempio un’allergia, una dieta, la difficoltà a fare le scale. Scrivi solo ciò che serve all’organizzazione.</span>
+          <p class="messaggio-errore" id="esigenze-errore"></p>
+          <textarea id="esigenze" name="esigenze" maxlength="500" rows="3" aria-describedby="esigenze-errore"></textarea>
+        </div>
+
+        <div class="campo" data-campo="note">
+          <label for="note">Altro da dire alla segreteria <span class="facoltativo">(facoltativo)</span></label>
+          <p class="messaggio-errore" id="note-errore"></p>
+          <textarea id="note" name="note" maxlength="1000" rows="3" aria-describedby="note-errore"></textarea>
+        </div>
+      </fieldset>
+
+      <div class="gruppo passo-pannello" data-passo="3" hidden>
+        <h2 class="titolo-passo">Conferma e invia</h2>
+        <p class="aiuto-passo">Controlla il consenso e invia l’iscrizione. Potrai iscrivere un’altra persona subito dopo.</p>
+
+        <div class="campo consenso" data-campo="consenso_privacy">
+          <p class="messaggio-errore" id="consenso_privacy-errore"></p>
+          <label class="opzione">
+            <input type="checkbox" id="consenso_privacy" name="consenso_privacy" aria-describedby="consenso_privacy-errore">
+            <span>Acconsento al trattamento dei dati di questo modulo, comprese le eventuali esigenze alimentari o di salute che ho indicato, per organizzare il pellegrinaggio.</span>
+          </label>
+          <details class="informativa">
+            <summary>Come usiamo i tuoi dati</summary>
+            <p>I dati sono raccolti dalla <span data-evento="parrocchia"></span> solo per organizzare il pellegrinaggio: iscrizione, prenotazione di trasporto e alloggio, comunicazioni ai partecipanti. Li vedono solo la segreteria parrocchiale e, per quanto necessario, l’agenzia di viaggio e le strutture che ci ospitano.</p>
+            <p>Sono conservati fino alla chiusura amministrativa del pellegrinaggio e poi cancellati. Puoi chiederne in ogni momento la correzione o la cancellazione scrivendo a <span data-evento="contatto"></span>.</p>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <div class="trappola" aria-hidden="true">
+      <label for="sito_web">Non compilare questo campo</label>
+      <input type="text" id="sito_web" name="sito_web" tabindex="-1" autocomplete="off">
+    </div>
+
+    <p id="errore-invio" class="errore-invio" role="alert" hidden></p>
+
+    <div class="barra-passi">
+      <button type="button" class="btn btn-secondario" id="indietro" hidden>Indietro</button>
+      <button type="button" class="btn" id="avanti">Avanti</button>
+      <button type="submit" class="btn invia" id="invia" hidden>Invia iscrizione</button>
+    </div>
+    </div>
+  </form>
+
+  <section id="ricevuta" class="ricevuta" hidden tabindex="-1" aria-labelledby="ricevuta-titolo">
+    <div class="credenziale">
+      <svg class="timbro" viewBox="0 0 200 200" aria-hidden="true">
+        <defs><path id="giro" d="M100,100 m-72,0 a72,72 0 1,1 144,0 a72,72 0 1,1 -144,0"/></defs>
+        <circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" stroke-width="5"/>
+        <circle cx="100" cy="100" r="56" fill="none" stroke="currentColor" stroke-width="2.5"/>
+        <text font-size="15" font-weight="700" fill="currentColor"><textPath href="#giro" textLength="446" lengthAdjust="spacing">ISCRIZIONE RICEVUTA ✦ PELLEGRINAGGIO ✦</textPath></text>
+        <text x="100" y="93" text-anchor="middle" font-size="14" fill="currentColor" id="timbro-data"></text>
+        <text x="100" y="118" text-anchor="middle" font-size="21" font-weight="700" fill="currentColor" id="timbro-codice"></text>
+      </svg>
+      <h2 id="ricevuta-titolo">Iscrizione inviata</h2>
+      <p class="ricevuta-nome" id="ricevuta-nome"></p>
+      <p>Ti abbiamo mandato un’email a <strong id="ricevuta-email"></strong>. Se non la trovi, guarda nella posta indesiderata.</p>
+      <p>La segreteria controllerà l’iscrizione e ti scriverà quando sarà confermata. Per ora non devi fare altro.</p>
+    </div>
+    <div class="azioni-ricevuta">
+      <button type="button" class="btn" id="altra">Iscrivi un’altra persona</button>
+      <p class="aiuto">Email, telefono e indirizzo restano compilati.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="piede">
+  <div class="colonna piede-interno">
+    <div class="piede-blocco">
+      <p class="piede-etichetta">Informazioni</p>
+      <p>Per domande sull’iscrizione contatta <span data-evento="contatto"></span>.</p>
+    </div>
+    <div class="piede-blocco">
+      <p class="piede-etichetta">Navigazione</p>
+      <p><a id="link-home-piede" href="/">Torna all’elenco dei pellegrinaggi</a></p>
+    </div>
+  </div>
+</footer>
+</div>
+
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/iscrizione.js"></script>
+</body>
+</html>
