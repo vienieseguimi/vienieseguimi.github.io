@@ -57,25 +57,52 @@
     return String((window.PELLEGRINAGGIO && window.PELLEGRINAGGIO.basePath) || '').replace(/\/$/, '');
   }
 
-  /** Ultimo segmento del path se è uno slug valido (es. /assisi-2026 → assisi-2026). */
-  function slugDaUrl() {
-    const base = basePath();
+  function pathParti() {
     let path = location.pathname.replace(/\/$/, '') || '/';
+    const base = basePath();
     if (base && path.startsWith(base)) path = path.slice(base.length) || '/';
-    const parti = path.split('/').filter(Boolean);
+    return path.split('/').filter(Boolean);
+  }
+
+  function entePathPrefix() {
+    const ente = window.PELLEGRINAGGIO && window.PELLEGRINAGGIO.ente;
+    if (ente && ente.subdomain) return String(ente.subdomain).toLowerCase();
+    // Prima del resolve (o se manca cfg.ente): primo segmento path = id ente
+    if (window.PellTenant && typeof window.PellTenant.enteDaPath === 'function') {
+      return window.PellTenant.enteDaPath() || '';
+    }
+    return '';
+  }
+
+  /**
+   * Slug pellegrinaggio dall’URL.
+   * Con ente: /vanzago/assisi-2026 → assisi-2026
+   * Senza ente (dev locale): /assisi-2026 → assisi-2026
+   */
+  function slugDaUrl() {
+    const parti = pathParti().map(p => p.toLowerCase());
     if (!parti.length) return '';
-    const cand = parti[0].toLowerCase();
-    if (cand.endsWith('.html') || cand === 'css' || cand === 'js') return '';
+    const pref = entePathPrefix();
+    let cand;
+    if (pref && parti[0] === pref) cand = parti[1] || '';
+    else if (!pref) cand = parti[0] || '';
+    else return '';
+    if (!cand || cand.endsWith('.html') || cand === 'css' || cand === 'js') return '';
+    if (cand === 'secretariat' || cand === 'segreteria') return '';
     return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(cand) ? cand : '';
   }
 
   function urlEdizione(slug) {
     const base = basePath();
-    return (base || '') + '/' + slug + '/';
+    const pref = entePathPrefix();
+    const mid = pref ? '/' + pref : '';
+    return (base || '') + mid + '/' + slug + '/';
   }
 
   function urlHome() {
     const base = basePath();
+    const pref = entePathPrefix();
+    if (pref) return (base || '') + '/' + pref + '/';
     return base ? base + '/' : '/';
   }
 

@@ -1,0 +1,144 @@
+/* Console operatori piattaforma — densa, da PC. */
+html { height: 100%; }
+body {
+  margin: 0;
+  min-height: 100%;
+  min-height: 100dvh;
+  font-family: var(--font);
+  background: var(--pietra);
+  color: var(--inchiostro);
+}
+
+.plat-accesso {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.plat-box {
+  width: 100%;
+  max-width: 22rem;
+  background: var(--carta);
+  border: 1px solid var(--bordo-tenue);
+  border-top: 4px solid var(--segnavia);
+  border-radius: var(--r-superficie);
+  padding: 1.5rem 1.25rem 1.35rem;
+  box-shadow: var(--ombra-media);
+}
+.plat-box .brand { margin: 0 0 .75rem; justify-content: center; }
+.plat-box .marchio {
+  margin: 0 0 .35rem;
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--grigio);
+  text-align: center;
+}
+.plat-box h1 { font-size: 1.35rem; margin: 0 0 .35rem; text-align: center; }
+.plat-box > .aiuto { text-align: center; }
+.plat-box .btn { width: 100%; }
+
+.plat-shell { min-height: 100dvh; display: flex; flex-direction: column; }
+.plat-top {
+  background: var(--inchiostro);
+  color: #fff;
+  border-bottom: 3px solid var(--segnavia);
+  padding: .7rem 0;
+}
+.plat-top .colonna {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem 1.25rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.plat-top h1 { font-size: 1.15rem; margin: 0; }
+.plat-top .meta { color: #c8d0dc; font-size: .9rem; margin: .15rem 0 0; }
+.plat-main {
+  flex: 1;
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 1.25rem 16px 2rem;
+  width: 100%;
+}
+
+.plat-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.plat-lista { display: grid; gap: .65rem; }
+.plat-card {
+  background: var(--carta);
+  border: 1px solid var(--bordo-tenue);
+  border-left: 3px solid var(--segnavia);
+  border-radius: var(--r-superficie);
+  padding: .9rem 1rem;
+  display: grid;
+  gap: .35rem .75rem;
+}
+@media (min-width: 720px) {
+  .plat-card {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+}
+.plat-card h2 { font-size: 1.05rem; margin: 0; }
+.plat-card .sub { color: var(--grigio); font-size: .9rem; margin: 0; word-break: break-all; }
+.plat-card .azioni { display: flex; flex-wrap: wrap; gap: .4rem; }
+.plat-badge {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: .15rem .45rem;
+  border-radius: 4px;
+}
+.plat-badge.on { background: var(--timbro-tenue); color: var(--timbro); }
+.plat-badge.off { background: var(--rifiuto-tenue); color: var(--rifiuto); }
+
+.plat-form {
+  background: var(--carta);
+  border: 1px solid var(--bordo-tenue);
+  border-radius: var(--r-superficie);
+  padding: 1.15rem 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+.plat-form h2 { font-size: 1.1rem; margin: 0 0 .85rem; }
+.plat-msg { margin: .6rem 0 0; font-weight: 700; }
+.plat-msg.err { color: var(--rifiuto); }
+.plat-msg.ok { color: var(--timbro); }
+
+.plat-piede {
+  margin-top: auto;
+  border-top: 1px solid var(--bordo);
+  background: #dfe3ea;
+  padding: .85rem 0 calc(.95rem + env(safe-area-inset-bottom));
+  color: var(--grigio);
+  font-size: .82rem;
+}
+.plat-piede .colonna {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+.plat-piede-copy { margin: 0; font-size: .82rem; }
+.plat-piede a {
+  font-weight: 700;
+  color: var(--inchiostro);
+  text-underline-offset: 3px;
+}
+.plat-piede a:hover { color: var(--inchiostro-soft); }
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}

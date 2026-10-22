@@ -1,18 +1,131 @@
-(function () {
+(async function () {
   const { api, memoria, slugDaUrl, urlEdizione, urlHome } = window.Pell;
+  const { risolviTenant, platformApi, urlEnte } = window.PellTenant;
   const cfg = window.PELLEGRINAGGIO;
   const $ = s => document.querySelector(s);
   const $$ = s => Array.from(document.querySelectorAll(s));
+
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  }
+
+  function mostraErroreHome(msg) {
+    $('#home-caricamento').hidden = true;
+    $('#home-errore').hidden = false;
+    if (msg) {
+      const p = $('#home-errore').querySelector('p:not(.stato-home-etichetta):not(.stato-home-azioni)');
+      if (p) p.textContent = msg;
+    }
+    const riprova = $('#home-riprova');
+    if (riprova) riprova.addEventListener('click', () => location.reload());
+  }
+
+  async function avviaPortale() {
+    $('#vista-home').hidden = false;
+    document.title = 'Vieni e seguimi · Comunità';
+    $('#home-parrocchia').textContent = 'Vieni e seguimi';
+    const sotto = $('#home-brand-sotto');
+    if (sotto) sotto.textContent = 'Portale iscrizioni';
+    const h1 = $('#vista-home h1');
+    if (h1) h1.textContent = 'Comunità';
+    const meta = document.querySelector('.meta-home');
+    if (meta) meta.textContent = 'Scegli la tua parrocchia o comunità pastorale.';
+    const piedeSeg = $('#piede-segreteria');
+    if (piedeSeg) piedeSeg.hidden = true;
+    const piedePlat = $('#piede-piattaforma');
+    if (piedePlat) piedePlat.hidden = false;
+    try {
+      const r = await platformApi('enti_attivi', {}, { timeoutMs: 15000 });
+      $('#home-caricamento').hidden = true;
+      const lista = r.enti || [];
+      if (!lista.length) {
+        $('#home-vuoto').hidden = false;
+        $('#home-vuoto').querySelector('h2').textContent = 'Nessuna comunità ancora';
+        $('#home-vuoto').querySelector('p').textContent =
+          'Le iscrizioni saranno disponibili quando la piattaforma avrà attivato le comunità.';
+        return;
+      }
+      const box = $('#home-portale');
+      box.hidden = false;
+      box.classList.add('lista-enti');
+      box.innerHTML = lista.map(e =>
+        '<a class="card-edizione card-ente" href="' + esc(urlEnte(e.subdomain, '/')) + '">' +
+        '<h2>' + esc(e.nome) + '</h2>' +
+        '<p class="card-fatti">Iscrizioni ai pellegrinaggi</p>' +
+        '<span class="card-cta">Entra</span></a>'
+      ).join('');
+    } catch (err) {
+      mostraErroreHome('Non riusciamo a caricare l’elenco delle comunità.');
+    }
+  }
+
+  const tenant = await risolviTenant();
+
+  if (tenant.mode === 'redirect') return;
+
+  if (tenant.mode === 'errore') {
+    $('#vista-home').hidden = false;
+    $('#home-caricamento').hidden = true;
+    $('#home-ente-mancante').hidden = false;
+    const msg = $('#home-ente-mancante-msg');
+    if (msg) msg.textContent = tenant.messaggio || msg.textContent;
+    const piedeSeg = $('#piede-segreteria');
+    if (piedeSeg) piedeSeg.hidden = true;
+    document.title = 'Vieni e seguimi · Comunità non trovata';
+    return;
+  }
+
+  // Home di piattaforma: elenco enti → click → /<ente>/
+  if (tenant.mode === 'apex') {
+    await avviaPortale();
+    return;
+  }
+
+  // Dopo il resolve: cfg.ente è valorizzato, così /demo/ non viene preso come slug
   const slug = slugDaUrl();
 
-  // ---- Home: elenco edizioni aperte
+  if (tenant.mode === 'ente' && cfg.ente) {
+    if (cfg.ente.nome) {
+      document.querySelectorAll('#home-parrocchia').forEach(el => { el.textContent = cfg.ente.nome; });
+    }
+    const brandHome = $('#vista-home .brand');
+    if (brandHome) brandHome.href = urlEnte(cfg.ente.subdomain, '/');
+    const linkSeg = $('#link-secretariat');
+    if (linkSeg) linkSeg.href = urlEnte(cfg.ente.subdomain, 'secretariat');
+  }
+
+  // ---- Home ente: elenco pellegrinaggi aperti
   if (!slug) {
     $('#vista-home').hidden = false;
-    document.title = 'Vieni e seguimi · Iscrizioni';
+    document.title = (cfg.ente && cfg.ente.nome ? cfg.ente.nome + ' · ' : '') + 'Iscrizioni · Vieni e seguimi';
+    const meta = document.querySelector('.meta-home');
+    if (meta) meta.textContent = 'Scegli il pellegrinaggio a cui vuoi iscriverti.';
+    const indietro = $('#link-portale-home');
+    if (indietro) {
+      indietro.hidden = false;
+      indietro.href = (cfg.basePath || '') + '/' || '/';
+    }
+    const piedePlat = $('#piede-piattaforma');
+    if (piedePlat) {
+      piedePlat.hidden = false;
+      const etichetta = piedePlat.querySelector('.piede-etichetta');
+      if (etichetta) etichetta.textContent = 'Comunità';
+      const a = piedePlat.querySelector('a');
+      if (a) {
+        a.href = (cfg.basePath || '') + '/' || '/';
+        a.textContent = 'Tutte le comunità';
+      }
+    }
     api('edizioni_pubbliche', {}, { timeoutMs: 15000 }).then(r => {
       $('#home-caricamento').hidden = true;
       const lista = r.edizioni || [];
-      if (lista[0] && lista[0].parrocchia) $('#home-parrocchia').textContent = lista[0].parrocchia;
+      const nomeEnte = (lista[0] && lista[0].parrocchia)
+        || (cfg.ente && cfg.ente.nome)
+        || '';
+      if (nomeEnte) {
+        $('#home-parrocchia').textContent = nomeEnte;
+        document.title = nomeEnte + ' · Iscrizioni · Vieni e seguimi';
+      }
       if (!lista.length) { $('#home-vuoto').hidden = false; return; }
       const box = $('#home-lista');
       box.hidden = false;
@@ -26,10 +139,7 @@
           '<span class="card-cta">Iscriviti</span></a>';
       }).join('');
     }).catch(() => {
-      $('#home-caricamento').hidden = true;
-      $('#home-errore').hidden = false;
-      const riprova = $('#home-riprova');
-      if (riprova) riprova.addEventListener('click', () => location.reload());
+      mostraErroreHome();
     });
     return;
   }
@@ -37,9 +147,13 @@
   // ---- Modulo edizione
   $('#vista-modulo').hidden = false;
   const home = urlHome();
-  ['#link-altre', '#link-home-mancante', '#link-home-piede', '#link-home-testata'].forEach(s => {
+  ['#link-altre', '#link-home-mancante', '#link-home-piede', '#link-home-testata', '#link-brand-modulo'].forEach(s => {
     const a = $(s); if (a) a.href = home;
   });
+  if (cfg.ente && cfg.ente.nome) {
+    const bn = document.querySelector('#vista-modulo .brand-nome');
+    if (bn) bn.textContent = cfg.ente.nome;
+  }
 
   const modulo = $('#modulo');
   const BOZZA = 'pellegrinaggio.bozza.' + slug;
@@ -54,10 +168,6 @@
   const FOCUS_PASSO = ['#nome', '#email', 'input[name=sistemazione]', '#consenso_privacy'];
   let passo = 0;
   let evento = null;
-
-  function esc(v) {
-    return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-  }
 
   function applicaEvento(ev) {
     evento = ev;

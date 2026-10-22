@@ -34,24 +34,22 @@ body {
 .testata {
   background: var(--inchiostro);
   color: #fff;
-  padding: .55rem 0 .6rem;
+  padding: .85rem 0 1rem;
   border-bottom: 3px solid var(--segnavia);
 }
 
-.testata-griglia {
-  display: grid;
-  gap: .4rem .75rem;
-  align-items: start;
-}
-
+/* Pulsante indietro: solo freccia, stesso aspetto su home e modulo */
 .testata-indietro {
-  grid-column: 1 / -1;
-  justify-self: start;
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
   margin: 0;
-  padding: .3rem .65rem;
-  font-size: .84rem;
+  padding: 0;
+  font-size: 1.15rem;
+  line-height: 1;
   font-weight: 700;
   color: #fff;
   text-decoration: none;
@@ -62,8 +60,24 @@ body {
 .testata-indietro:hover {
   background: rgba(255, 255, 255, .2);
   border-color: var(--segnavia);
+  color: #fff;
+  text-decoration: none;
 }
 
+.testata-brand-riga {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-bottom: .55rem;
+  min-width: 0;
+}
+.testata-brand-riga .brand { margin-bottom: 0; min-width: 0; }
+
+.testata-griglia {
+  display: grid;
+  gap: .65rem .75rem;
+  align-items: start;
+}
 .testata-titoli { min-width: 0; }
 
 .testata h1 {
@@ -75,21 +89,21 @@ body {
 }
 .testata h1 .meta {
   display: block;
-  font-size: clamp(1.2rem, 3.5vw, 1.4rem);
+  font-size: clamp(1.35rem, 4vw, 1.7rem);
   font-weight: 700;
   color: #fff;
 }
 .testata h1 .meta:empty { display: none; }
 .testata h1 .titolo-evento {
   display: block;
-  margin-top: .15rem;
-  font-size: .92rem;
+  margin-top: .35rem;
+  font-size: .95rem;
   font-weight: 400;
-  color: #d5dbe6;
+  color: #c8d0dc;
 }
 .testata h1 .meta:empty + .titolo-evento {
   margin-top: 0;
-  font-size: clamp(1.2rem, 3.5vw, 1.4rem);
+  font-size: clamp(1.35rem, 4vw, 1.7rem);
   font-weight: 700;
   color: #fff;
 }
@@ -145,7 +159,6 @@ body {
 }
 
 /* ---- Home */
-#vista-home .testata { padding: .85rem 0 1rem; }
 #vista-home .testata h1 {
   font-size: clamp(1.35rem, 4vw, 1.7rem);
   font-weight: 700;
@@ -153,6 +166,7 @@ body {
 }
 .meta-home { color: #c8d0dc; margin: .5rem 0 0; font-size: .95rem; }
 .lista-edizioni { display: grid; gap: .75rem; padding: 1.25rem 0 2rem; }
+.lista-enti { gap: 1rem; }
 .card-edizione {
   display: block;
   text-decoration: none;
@@ -162,9 +176,12 @@ body {
   padding: 1.05rem 1.15rem 1rem;
   border: 1px solid var(--bordo-tenue);
   border-left: 3px solid var(--segnavia);
-  transition: border-color var(--transizione);
+  transition: border-color var(--transizione), box-shadow var(--transizione), transform var(--transizione);
 }
-.card-edizione:hover { border-color: var(--bordo); }
+.card-edizione:hover { border-color: var(--bordo); box-shadow: var(--ombra-media); }
+.card-edizione:active { transform: translateY(1px); }
+.card-ente { padding: 1.25rem 1.3rem 1.15rem; }
+.card-ente h2 { font-size: 1.25rem; }
 .card-edizione h2 { font-size: 1.15rem; margin: 0 0 .25rem; }
 .card-edizione .meta-card {
   display: block; font-weight: 400; color: var(--grigio);
@@ -172,10 +189,28 @@ body {
 }
 .card-fatti, .card-quota { margin: .2rem 0 0; color: var(--grigio); font-size: .9rem; }
 .card-cta {
-  display: inline-block; margin-top: .7rem; font-weight: 700; font-size: .95rem;
-  color: var(--inchiostro); text-decoration: underline; text-underline-offset: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  margin-top: .75rem;
+  font-weight: 700;
+  font-size: .95rem;
+  color: var(--inchiostro);
+  text-decoration: none;
 }
-.caricamento-home { color: var(--grigio); padding: 1.5rem 0; }
+.card-cta::after {
+  content: '→';
+  font-weight: 700;
+  transition: transform var(--transizione);
+}
+.card-edizione:hover .card-cta { text-decoration: underline; text-underline-offset: 3px; }
+.card-edizione:hover .card-cta::after { transform: translateX(2px); }
+.caricamento-home {
+  color: var(--grigio);
+  text-align: center;
+  padding: 2.25rem 0 2rem;
+  font-size: 1.02rem;
+}
 
 /* Stati home: vuoto / servizio non pronto */
 .stato-home {
@@ -536,32 +571,41 @@ fieldset.campo > legend, fieldset.scelta > legend {
   background: #dfe3ea;
   border-top: 1px solid var(--bordo);
   color: var(--grigio);
-  font-size: .9rem;
-  padding: 1.35rem 0 calc(1.5rem + env(safe-area-inset-bottom));
+  font-size: .88rem;
+  padding: .85rem 0 calc(.95rem + env(safe-area-inset-bottom));
 }
 #vista-modulo .piede {
-  padding-bottom: calc(5.75rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(5.35rem + env(safe-area-inset-bottom));
 }
 .piede-interno {
   display: grid;
-  gap: 1.1rem;
+  gap: .65rem;
 }
 .piede-blocco { min-width: 0; }
 .piede-etichetta {
-  margin: 0 0 .25rem;
-  font-size: .72rem;
+  margin: 0 0 .15rem;
+  font-size: .7rem;
   font-weight: 700;
   letter-spacing: .04em;
   text-transform: uppercase;
   color: var(--inchiostro);
 }
-.piede p { margin: 0; line-height: 1.4; }
+.piede p { margin: 0; line-height: 1.35; }
 .piede a {
   font-weight: 700;
   color: var(--inchiostro);
   text-underline-offset: 3px;
 }
 .piede a:hover { color: var(--inchiostro-soft); }
+.piede-copy {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: .8rem;
+  color: var(--grigio);
+}
+.piede-copy a { font-weight: 700; }
 
 /* =========================================================
    Tablet ≥ 640px
@@ -570,17 +614,13 @@ fieldset.campo > legend, fieldset.scelta > legend {
   .colonna { max-width: 46rem; padding: 0 22px; }
   main#contenuto { padding-top: 2rem; }
 
-  .testata { padding: .55rem 0 .6rem; }
   .testata-griglia {
     grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "indietro indietro"
-      "titoli fatti";
+    grid-template-areas: "titoli fatti";
     column-gap: 2rem;
     row-gap: .35rem;
     align-items: end;
   }
-  .testata-indietro { grid-area: indietro; }
   .testata-titoli { grid-area: titoli; }
   .fatti {
     grid-area: fatti;
@@ -588,8 +628,8 @@ fieldset.campo > legend, fieldset.scelta > legend {
     padding-left: 1rem;
     border-left: 2px solid var(--segnavia);
   }
-  .testata h1 .meta { font-size: 1.3rem; }
-  .testata h1 .meta:empty + .titolo-evento { font-size: 1.3rem; }
+  .testata h1 .meta { font-size: 1.55rem; }
+  .testata h1 .meta:empty + .titolo-evento { font-size: 1.55rem; }
   .fatti dt, .fatti dd { font-size: .85rem; }
 
   .intro { max-width: 36em; }
@@ -632,11 +672,11 @@ fieldset.campo > legend, fieldset.scelta > legend {
   .timbro { position: absolute; right: 10px; top: 10px; margin: 0; width: 120px; height: 120px; }
   .ricevuta h2 { font-size: 1.45rem; }
 
-  .piede { padding: 1.6rem 0 1.75rem; }
-  #vista-modulo .piede { padding-bottom: 1.75rem; }
+  .piede { padding: 1rem 0 1.1rem; }
+  #vista-modulo .piede { padding-bottom: 1.1rem; }
   .piede-interno {
     grid-template-columns: 1fr 1fr;
-    gap: 2rem;
+    gap: .65rem 1.75rem;
     align-items: start;
   }
   .lista-edizioni { gap: .85rem; padding: 1.5rem 0 2.5rem; }
@@ -649,10 +689,9 @@ fieldset.campo > legend, fieldset.scelta > legend {
 @media (min-width: 960px) {
   .colonna { max-width: 70rem; padding: 0 32px; }
 
-  .testata { padding: .6rem 0 .65rem; }
   .testata-griglia { column-gap: 2.5rem; }
-  .testata h1 .meta { font-size: 1.4rem; }
-  .testata h1 .meta:empty + .titolo-evento { font-size: 1.4rem; }
+  .testata h1 .meta { font-size: 1.7rem; }
+  .testata h1 .meta:empty + .titolo-evento { font-size: 1.7rem; }
 
   main#contenuto {
     padding-top: 2.25rem;

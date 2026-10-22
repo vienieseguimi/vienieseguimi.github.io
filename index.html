@@ -7,6 +7,11 @@
 <meta name="description" content="Vieni e seguimi: iscrizioni ai pellegrinaggi della parrocchia.">
 <meta property="og:title" content="Vieni e seguimi — iscrizioni ai pellegrinaggi">
 <meta property="og:description" content="Compila il modulo per iscriverti. Ricevi subito un'email di conferma della ricezione.">
+<meta property="og:image" content="https://vienieseguimi.github.io/img/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#1d2840">
 <!-- Su GitHub Pages di progetto: basePath = '/nome-repo' (stesso valore in config.js). -->
 <script>window.PELLEGRINAGGIO_BOOT = { basePath: '' };</script>
 <script>
@@ -16,6 +21,9 @@
 })(window.PELLEGRINAGGIO_BOOT.basePath);
 </script>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -28,7 +36,16 @@
 <div id="vista-home" hidden>
   <header class="testata">
     <div class="colonna">
-      <p class="parrocchia" id="home-parrocchia">Vieni e seguimi</p>
+      <div class="testata-brand-riga">
+        <a class="testata-indietro" id="link-portale-home" href="/" hidden aria-label="Tutte le comunità">←</a>
+        <a class="brand" href="/" aria-label="Vieni e seguimi — home">
+          <img class="brand-mark" src="img/logo-icona.png" width="40" height="40" alt="">
+          <span class="brand-testi">
+            <span class="brand-nome" id="home-parrocchia">Vieni e seguimi</span>
+            <span class="brand-sotto" id="home-brand-sotto">Iscrizioni ai pellegrinaggi</span>
+          </span>
+        </a>
+      </div>
       <h1>Iscrizioni</h1>
       <p class="meta-home">Scegli il pellegrinaggio a cui vuoi iscriverti.</p>
     </div>
@@ -63,13 +80,30 @@
         <button type="button" class="btn" id="home-riprova">Riprova ora</button>
       </p>
     </div>
+    <div id="home-portale" class="lista-edizioni" hidden></div>
+    <div id="home-ente-mancante" class="stato-home" hidden role="status">
+      <div class="stato-home-figura" aria-hidden="true">
+        <svg class="stato-home-segnavia" viewBox="0 0 96 96" width="72" height="72" focusable="false">
+          <circle cx="48" cy="48" r="46" fill="currentColor" class="stato-home-disco"/>
+          <path d="M28 46h28V34l18 18-18 18V58H28z" fill="currentColor" class="stato-home-freccia"/>
+        </svg>
+      </div>
+      <h2>Comunità non trovata</h2>
+      <p id="home-ente-mancante-msg">Questo indirizzo non corrisponde a una parrocchia o comunità attiva.</p>
+      <p class="stato-home-azioni"><a class="btn btn-secondario" id="link-portale-mancante" href="/">Torna all’elenco</a></p>
+    </div>
   </main>
   <footer class="piede">
     <div class="colonna piede-interno">
-      <div class="piede-blocco">
+      <div class="piede-blocco" id="piede-segreteria">
         <p class="piede-etichetta">Segreteria</p>
-        <p><a href="secretariat.html">Accesso al pannello segreteria</a></p>
+        <p><a href="secretariat.html" id="link-secretariat">Accesso al pannello segreteria</a></p>
       </div>
+      <div class="piede-blocco" id="piede-piattaforma" hidden>
+        <p class="piede-etichetta">Piattaforma</p>
+        <p><a href="platform.html">Console operatori</a></p>
+      </div>
+      <p class="piede-copy">© 2026 <a href="https://github.com/davidemainardi" rel="noopener noreferrer" target="_blank">Davide Mainardi</a> · <a href="#privacy" data-apri-privacy>Dati e privacy</a></p>
     </div>
   </footer>
 </div>
@@ -77,34 +111,57 @@
 <!-- Modulo iscrizione per un pellegrinaggio -->
 <div id="vista-modulo" hidden>
 <header class="testata">
-  <div class="colonna testata-griglia">
-    <a class="testata-indietro" id="link-home-testata" href="/">← Tutti i pellegrinaggi</a>
-    <div class="testata-titoli">
-      <h1>
-        <span class="meta" data-evento="meta"></span>
-        <span class="titolo-evento" data-evento="titolo"></span>
-      </h1>
+  <div class="colonna">
+    <div class="testata-brand-riga">
+      <a class="testata-indietro" id="link-home-testata" href="/" aria-label="Tutti i pellegrinaggi">←</a>
+      <a class="brand" id="link-brand-modulo" href="/" aria-label="Torna all’elenco">
+        <img class="brand-mark" src="img/logo-icona.png" width="40" height="40" alt="">
+        <span class="brand-testi">
+          <span class="brand-nome" data-evento="parrocchia">Vieni e seguimi</span>
+          <span class="brand-sotto">Iscrizioni ai pellegrinaggi</span>
+        </span>
+      </a>
     </div>
-    <dl class="fatti">
-      <div><dt>Quando</dt><dd data-evento="quando"></dd></div>
-      <div><dt>Quota</dt><dd data-evento="quota"></dd></div>
-      <div><dt>Iscrizioni</dt><dd data-evento="scadenza"></dd></div>
-    </dl>
+    <div class="testata-griglia">
+      <div class="testata-titoli">
+        <h1>
+          <span class="meta" data-evento="meta"></span>
+          <span class="titolo-evento" data-evento="titolo"></span>
+        </h1>
+      </div>
+      <dl class="fatti">
+        <div><dt>Quando</dt><dd data-evento="quando"></dd></div>
+        <div><dt>Quota</dt><dd data-evento="quota"></dd></div>
+        <div><dt>Iscrizioni</dt><dd data-evento="scadenza"></dd></div>
+      </dl>
+    </div>
   </div>
 </header>
 
 <main class="colonna" id="contenuto">
 
-  <div id="chiuse" class="avviso" hidden>
+  <div id="chiuse" class="stato-home" hidden>
+    <div class="stato-home-figura" aria-hidden="true">
+      <svg class="stato-home-segnavia" viewBox="0 0 96 96" width="72" height="72" focusable="false">
+        <circle cx="48" cy="48" r="46" fill="currentColor" class="stato-home-disco"/>
+        <path d="M28 46h28V34l18 18-18 18V58H28z" fill="currentColor" class="stato-home-freccia"/>
+      </svg>
+    </div>
     <h2>Le iscrizioni sono chiuse</h2>
     <p>Per informazioni contatta <span data-evento="contatto"></span>.</p>
-    <p><a id="link-altre" href="/">Altri pellegrinaggi</a></p>
+    <p class="stato-home-azioni"><a class="btn btn-secondario" id="link-altre" href="/">Altri pellegrinaggi</a></p>
   </div>
 
-  <div id="edizione-mancante" class="avviso" hidden>
+  <div id="edizione-mancante" class="stato-home" hidden>
+    <div class="stato-home-figura" aria-hidden="true">
+      <svg class="stato-home-segnavia" viewBox="0 0 96 96" width="72" height="72" focusable="false">
+        <circle cx="48" cy="48" r="46" fill="currentColor" class="stato-home-disco"/>
+        <path d="M28 46h28V34l18 18-18 18V58H28z" fill="currentColor" class="stato-home-freccia"/>
+      </svg>
+    </div>
     <h2>Pellegrinaggio non trovato</h2>
     <p>Controlla il link oppure torna all’elenco.</p>
-    <p><a id="link-home-mancante" href="/">Torna all’elenco</a></p>
+    <p class="stato-home-azioni"><a class="btn btn-secondario" id="link-home-mancante" href="/">Torna all’elenco</a></p>
   </div>
 
   <form id="modulo" novalidate hidden>
@@ -338,12 +395,27 @@
       <p class="piede-etichetta">Navigazione</p>
       <p><a id="link-home-piede" href="/">Torna all’elenco dei pellegrinaggi</a></p>
     </div>
+    <p class="piede-copy">© 2026 <a href="https://github.com/davidemainardi" rel="noopener noreferrer" target="_blank">Davide Mainardi</a> · <a href="#privacy" data-apri-privacy>Dati e privacy</a></p>
   </div>
 </footer>
 </div>
 
+<dialog id="dialog-privacy" class="dialog-privacy" aria-labelledby="privacy-titolo">
+  <div class="dialog-privacy-corpo">
+    <h2 id="privacy-titolo">Dati e privacy</h2>
+    <p>I dati delle iscrizioni ai pellegrinaggi sono <strong>salvati e gestiti esclusivamente dalle singole realtà parrocchiali</strong> (o comunità pastorali) che usano questa piattaforma, ciascuna sul proprio foglio e backend Apps Script.</p>
+    <p><strong>Vieni e seguimi</strong> funge solo da aggregatore dei moduli di iscrizione: mette a disposizione le pagine di compilazione e il collegamento all’ente giusto. Non conserva i dati personali dei partecipanti e non li usa per altri scopi.</p>
+    <p>Per correzione, cancellazione o informazioni sui tuoi dati, contatta la segreteria della comunità a cui ti sei iscritto.</p>
+    <form method="dialog" class="dialog-privacy-azioni">
+      <button type="submit" class="btn">Chiudi</button>
+    </form>
+  </div>
+</dialog>
+
 <script src="config.js"></script>
 <script src="js/api.js"></script>
+<script src="js/tenant.js"></script>
+<script src="js/privacy.js"></script>
 <script src="js/registration.js"></script>
 </body>
 </html>

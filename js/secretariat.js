@@ -4,9 +4,24 @@
  * conosciuta. Se non è cambiato nulla la risposta è vuota e costa pochissimo.
  * Il polling si ferma quando la scheda non è visibile e riparte subito quando torna in primo piano.
  */
-(function () {
+(async function () {
   const { api, memoria, urlEdizione } = window.Pell;
+  const { risolviTenant } = window.PellTenant;
   const cfg = window.PELLEGRINAGGIO;
+
+  const tenant = await risolviTenant();
+  if (tenant.mode === 'errore' || (tenant.mode === 'apex' && !cfg.apiUrl)) {
+    document.body.innerHTML = '<main class="accesso"><div class="accesso-box">' +
+      '<p class="marchio">Vieni e seguimi</p><h1>Segreteria</h1>' +
+      '<p>Apri il pannello dalla pagina della tua comunità' +
+      ' (es. <code>/vanzago/secretariat</code> oppure <code>secretariat.html?ente=vanzago</code>).' +
+      '</p><p><a href="/">Torna alla home</a></p></div></main>';
+    return;
+  }
+  if (cfg.ente && cfg.ente.nome) {
+    const h = document.querySelector('#vista-accesso h1');
+    if (h) h.textContent = 'Segreteria · ' + cfg.ente.nome;
+  }
   const $ = s => document.querySelector(s);
   const SESSIONE = 'pellegrinaggio.sessione';
   const NOME = 'pellegrinaggio.nome-segreteria';

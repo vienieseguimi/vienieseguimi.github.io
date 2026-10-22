@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Vieni e seguimi · Piattaforma</title>
+<script>window.PELLEGRINAGGIO_BOOT = { basePath: '' };</script>
+<script>
+(function (b) {
+  b = String(b || '').replace(/\/$/, '');
+  document.write('<base href="' + location.origin + (b || '') + '/">');
+})(window.PELLEGRINAGGIO_BOOT.basePath);
+</script>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1d2840">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/platform.css">
+</head>
+<body>
+
+<main id="vista-accesso" class="plat-accesso" hidden>
+  <form id="form-accesso" class="plat-box" novalidate>
+    <p class="brand">
+      <img class="brand-mark" src="img/logo-icona.png" width="48" height="48" alt="">
+    </p>
+    <p class="marchio">Vieni e seguimi</p>
+    <h1>Console piattaforma</h1>
+    <p class="aiuto" style="margin-bottom:1.15rem">Gestione delle comunità e dei loro backend Apps Script.</p>
+    <div class="campo">
+      <label for="acc-nome">Il tuo nome</label>
+      <input type="text" id="acc-nome" autocomplete="name" maxlength="40" required>
+    </div>
+    <div class="campo">
+      <label for="acc-password">Password piattaforma</label>
+      <input type="password" id="acc-password" autocomplete="current-password" required>
+    </div>
+    <p id="acc-errore" class="plat-msg err" role="alert" hidden></p>
+    <button class="btn" type="submit" id="acc-entra">Entra</button>
+  </form>
+</main>
+
+<div id="vista-app" class="plat-shell" hidden>
+  <header class="plat-top">
+    <div class="colonna">
+      <div>
+        <p class="brand" style="margin-bottom:.35rem">
+          <img class="brand-mark" src="img/logo-icona.png" width="36" height="36" alt="">
+          <span class="brand-testi">
+            <span class="brand-nome">Vieni e seguimi</span>
+            <span class="brand-sotto">Iscrizioni ai pellegrinaggi</span>
+          </span>
+        </p>
+        <h1 class="visually-hidden">Piattaforma</h1>
+        <p class="meta">Operatore: <span id="op-nome"></span></p>
+      </div>
+      <button type="button" class="btn btn-secondario btn-piccolo" id="esci">Esci</button>
+    </div>
+  </header>
+  <main class="plat-main">
+    <div class="plat-toolbar">
+      <h2 style="margin:0;font-size:1.15rem">Enti</h2>
+      <button type="button" class="btn" id="btn-nuovo">Nuovo ente</button>
+    </div>
+
+    <form id="form-ente" class="plat-form" hidden novalidate>
+      <h2 id="form-titolo">Nuovo ente</h2>
+      <input type="hidden" id="ente-id">
+      <div class="campo">
+        <label for="ente-nome">Nome (parrocchia o comunità)</label>
+        <input type="text" id="ente-nome" maxlength="120" required>
+      </div>
+      <div class="campo">
+        <label for="ente-sub">Percorso URL</label>
+        <span class="aiuto">Indirizzo pubblico: /<strong id="hint-path">vanzago</strong>/ (solo lettere minuscole, numeri e trattini)</span>
+        <input type="text" id="ente-sub" maxlength="48" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" spellcheck="false">
+      </div>
+      <div class="campo">
+        <label for="ente-api">URL web app Apps Script (/exec)</label>
+        <input type="url" id="ente-api" maxlength="300" required spellcheck="false">
+      </div>
+      <div class="campo">
+        <label class="opzione"><input type="checkbox" id="ente-attivo" checked> Attivo</label>
+      </div>
+      <p id="form-msg" class="plat-msg" hidden></p>
+      <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.85rem">
+        <button type="submit" class="btn" id="ente-salva">Salva</button>
+        <button type="button" class="btn btn-secondario" id="ente-annulla">Annulla</button>
+      </div>
+    </form>
+
+    <p id="lista-vuota" class="aiuto" hidden>Nessun ente ancora. Crea il primo con «Nuovo ente».</p>
+    <div id="lista-enti" class="plat-lista"></div>
+  </main>
+  <footer class="plat-piede">
+    <div class="colonna">
+      <p class="plat-piede-copy">© 2026 <a href="https://github.com/davidemainardi" rel="noopener noreferrer" target="_blank">Davide Mainardi</a> · <a href="#privacy" data-apri-privacy>Dati e privacy</a></p>
+    </div>
+  </footer>
+</div>
+
+<dialog id="dialog-privacy" class="dialog-privacy" aria-labelledby="privacy-titolo">
+  <div class="dialog-privacy-corpo">
+    <h2 id="privacy-titolo">Dati e privacy</h2>
+    <p>I dati delle iscrizioni ai pellegrinaggi sono <strong>salvati e gestiti esclusivamente dalle singole realtà parrocchiali</strong> (o comunità pastorali) che usano questa piattaforma, ciascuna sul proprio foglio e backend Apps Script.</p>
+    <p><strong>Vieni e seguimi</strong> funge solo da aggregatore dei moduli di iscrizione: mette a disposizione le pagine di compilazione e il collegamento all’ente giusto. Questa console gestisce il registry degli enti e non conserva i dati personali dei partecipanti.</p>
+    <p>Per correzione, cancellazione o informazioni sui dati di un iscritto, rivolgersi alla segreteria della comunità interessata.</p>
+    <form method="dialog" class="dialog-privacy-azioni">
+      <button type="submit" class="btn">Chiudi</button>
+    </form>
+  </div>
+</dialog>
+
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/tenant.js"></script>
+<script src="js/privacy.js"></script>
+<script src="js/platform.js"></script>
+</body>
+</html>
