@@ -36,13 +36,32 @@
   <main class="colonna" id="elenco-edizioni">
     <p class="caricamento-home" id="home-caricamento">Caricamento…</p>
     <div id="home-lista" class="lista-edizioni" hidden></div>
-    <div id="home-vuoto" class="avviso" hidden>
+    <div id="home-vuoto" class="stato-home" hidden>
+      <div class="stato-home-figura" aria-hidden="true">
+        <svg class="stato-home-segnavia" viewBox="0 0 96 96" width="72" height="72" focusable="false">
+          <circle cx="48" cy="48" r="46" fill="currentColor" class="stato-home-disco"/>
+          <path d="M28 46h28V34l18 18-18 18V58H28z" fill="currentColor" class="stato-home-freccia"/>
+        </svg>
+      </div>
       <h2>Nessun pellegrinaggio aperto</h2>
-      <p>Al momento non ci sono pellegrinaggi con iscrizioni aperte. Riprova più tardi oppure contatta la segreteria.</p>
+      <p>Al momento non ci sono iscrizioni da compilare. Torna più tardi oppure scrivi alla segreteria.</p>
     </div>
-    <div id="home-errore" class="avviso" hidden>
-      <h2>Non riusciamo a caricare l’elenco</h2>
-      <p>Controlla la connessione e ricarica la pagina.</p>
+    <div id="home-errore" class="stato-home stato-home-attesa" hidden role="status">
+      <div class="stato-home-figura" aria-hidden="true">
+        <svg class="stato-home-segnavia stato-home-segnavia-viva" viewBox="0 0 96 96" width="80" height="80" focusable="false">
+          <circle cx="48" cy="48" r="46" fill="currentColor" class="stato-home-disco"/>
+          <path d="M28 46h28V34l18 18-18 18V58H28z" fill="currentColor" class="stato-home-freccia"/>
+        </svg>
+        <span class="stato-home-passi">
+          <i></i><i></i><i></i>
+        </span>
+      </div>
+      <p class="stato-home-etichetta">In preparazione</p>
+      <h2>Ancora un passo</h2>
+      <p>Il servizio delle iscrizioni non è ancora attivo. Torna a questa pagina tra poco: qui comparirà l’elenco dei pellegrinaggi.</p>
+      <p class="stato-home-azioni">
+        <button type="button" class="btn" id="home-riprova">Riprova ora</button>
+      </p>
     </div>
   </main>
   <footer class="piede">

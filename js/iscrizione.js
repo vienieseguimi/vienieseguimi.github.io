@@ -28,6 +28,8 @@
     }).catch(() => {
       $('#home-caricamento').hidden = true;
       $('#home-errore').hidden = false;
+      const riprova = $('#home-riprova');
+      if (riprova) riprova.addEventListener('click', () => location.reload());
     });
     return;
   }

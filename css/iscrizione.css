@@ -177,6 +177,87 @@ body {
 }
 .caricamento-home { color: var(--grigio); padding: 1.5rem 0; }
 
+/* Stati home: vuoto / servizio non pronto */
+.stato-home {
+  margin: 1.5rem 0 2rem;
+  padding: 2rem 1.25rem 1.85rem;
+  text-align: center;
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 0%, var(--segnavia-tenue) 0%, transparent 70%),
+    var(--carta);
+  border: 1px solid var(--bordo-tenue);
+  border-radius: var(--r-superficie);
+  box-shadow: var(--ombra-soft);
+}
+.stato-home h2 {
+  font-size: clamp(1.25rem, 3.5vw, 1.45rem);
+  margin: 0 0 .55rem;
+  color: var(--inchiostro);
+}
+.stato-home > p {
+  margin: 0 auto;
+  max-width: 28rem;
+  color: var(--grigio);
+  font-size: 1.02rem;
+  line-height: 1.45;
+}
+.stato-home-etichetta {
+  display: inline-block;
+  margin: 0 0 .55rem !important;
+  padding: .2rem .65rem;
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--inchiostro);
+  background: var(--segnavia);
+  border-radius: 4px;
+}
+.stato-home-figura {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .85rem;
+  margin: 0 0 1.15rem;
+}
+.stato-home-segnavia { display: block; color: var(--inchiostro); }
+.stato-home-disco { color: var(--inchiostro); }
+.stato-home-freccia { color: var(--segnavia); }
+.stato-home-passi {
+  display: flex;
+  gap: .45rem;
+  align-items: center;
+}
+.stato-home-passi i {
+  display: block;
+  width: .42rem;
+  height: .42rem;
+  border-radius: 50%;
+  background: var(--bordo);
+}
+.stato-home-azioni { margin-top: 1.35rem !important; }
+.stato-home-azioni .btn { min-width: 10rem; }
+
+@keyframes stato-home-onda {
+  0%, 100% { opacity: .35; transform: scale(.85); }
+  40% { opacity: 1; transform: scale(1.15); background: var(--segnavia); }
+}
+@keyframes stato-home-scossa {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+}
+.stato-home-segnavia-viva .stato-home-freccia {
+  transform-origin: 40% 50%;
+  animation: stato-home-scossa 2.4s ease-in-out infinite;
+}
+.stato-home-passi i:nth-child(1) { animation: stato-home-onda 1.6s ease-in-out infinite; }
+.stato-home-passi i:nth-child(2) { animation: stato-home-onda 1.6s ease-in-out .25s infinite; }
+.stato-home-passi i:nth-child(3) { animation: stato-home-onda 1.6s ease-in-out .5s infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .stato-home-segnavia-viva .stato-home-freccia,
+  .stato-home-passi i { animation: none; }
+}
+
 /* ---- Contenuto */
 main {
   padding-top: 1.5rem;
@@ -522,6 +603,7 @@ fieldset.campo > legend, fieldset.scelta > legend {
   }
 
   #modulo, .avviso, .ricevuta { padding: 1.4rem 1.5rem 1.5rem; }
+  .stato-home { padding: 2.4rem 1.75rem 2.1rem; margin: 1.75rem 0 2.5rem; }
   #modulo { padding-bottom: 1.5rem; }
 
   .campi-riga {
