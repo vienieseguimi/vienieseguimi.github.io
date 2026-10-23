@@ -1051,3 +1051,14 @@ fieldset.campo > legend, fieldset.scelta > legend {
   #vista-modulo .fatti { gap: .6rem; }
   #vista-modulo .fatti > .fatto { flex: 0 1 auto; min-width: 10rem; padding: .55rem .95rem .6rem; }
 }
+
+/* Desktop: titolo e meta a sinistra, riquadri dei fatti sulla stessa riga a destra */
+@media (min-width: 960px) {
+  #vista-modulo .testata-griglia {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 2rem;
+  }
+  #vista-modulo .fatti { flex-wrap: nowrap; justify-content: flex-end; }
+  #vista-modulo .fatti > .fatto { min-width: 9rem; }
+}

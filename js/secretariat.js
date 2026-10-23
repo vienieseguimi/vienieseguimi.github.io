@@ -381,8 +381,20 @@
       s.posta.quota = r.quota; s.posta.inCoda = r.inCoda || 0;
       renderStatoPosta();
     } catch (err) {
-      if (err.codice === 'non_autorizzato') mostraAccesso(err.message);
+      if (err.codice === 'non_autorizzato') return mostraAccesso(err.message);
+      if (err.codice === 'azione_sconosciuta') postaNonAttiva();
     }
+  }
+
+  /** Backend della parrocchia non ancora aggiornato: niente trattini muti, un messaggio chiaro. */
+  function postaNonAttiva() {
+    $('#posta-quota').textContent = '—';
+    $('#posta-coda').textContent = '—';
+    const nota = $('#posta-nota');
+    nota.textContent = 'La posta non è ancora attiva per questa parrocchia: il servizio va aggiornato.';
+    nota.hidden = false;
+    $('#posta-invia-coda').hidden = true;
+    $('#posta-chip').hidden = true;
   }
 
   function rigaPostaHtml(e) {
@@ -422,6 +434,13 @@
       renderStatoPosta();
     } catch (err) {
       if (err.codice === 'non_autorizzato') return mostraAccesso(err.message);
+      if (err.codice === 'azione_sconosciuta') {
+        s.posta.email = [];
+        renderPosta();
+        $('#posta-vuota').textContent = 'La posta non è ancora attiva per questa parrocchia: il servizio va aggiornato.';
+        postaNonAttiva();
+        return;
+      }
       avviso(err.message || 'Impossibile caricare la posta.', 'errore');
     } finally {
       lista.removeAttribute('aria-busy');

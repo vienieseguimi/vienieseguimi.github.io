@@ -18,7 +18,7 @@ window.PELLEGRINAGGIO = {
   intervalloAggiornamento: 10000,
 
   // Allineata a package.json; `npm run publish` la riscrive sulla copia pubblica.
-  version: '0.2.14',
+  version: '0.2.15',
 };
 
 (function riempiVersione() {
