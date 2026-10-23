@@ -121,9 +121,8 @@
     api('edizioni_pubbliche', {}, { timeoutMs: 15000 }).then(r => {
       $('#home-caricamento').hidden = true;
       const lista = r.edizioni || [];
-      const nomeEnte = (lista[0] && lista[0].parrocchia)
-        || (cfg.ente && cfg.ente.nome)
-        || '';
+      // Header = nome ente (registry). Non usare edizione.parrocchia: può essere un testo vecchio/diverso.
+      const nomeEnte = (cfg.ente && cfg.ente.nome) || '';
       if (nomeEnte) {
         $('#home-parrocchia').textContent = nomeEnte;
         document.title = nomeEnte + ' · Iscrizioni · Vieni e seguimi';
