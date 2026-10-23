@@ -97,13 +97,13 @@
   </main>
   <footer class="piede">
     <div class="colonna piede-interno">
-      <div class="piede-blocco" id="piede-segreteria">
+      <div class="piede-blocco" data-piede-segreteria>
         <p class="piede-etichetta">Segreteria</p>
-        <p><a href="secretariat.html" id="link-secretariat">Accesso al pannello segreteria</a></p>
+        <p><a href="secretariat.html" data-link-segreteria>Accesso al pannello segreteria</a></p>
       </div>
-      <div class="piede-blocco" id="piede-piattaforma" hidden>
+      <div class="piede-blocco" data-piede-comunita hidden>
         <p class="piede-etichetta">Comunità</p>
-        <p><a href="/">Tutte le comunità</a></p>
+        <p><a href="/" data-link-comunita>Tutte le comunità</a></p>
       </div>
       <div class="piede-blocco piede-portale" data-piede-portale hidden>
         <p class="piede-etichetta">Piattaforma</p>
@@ -469,17 +469,28 @@
     </div>
   </section>
 
+  <p class="contatto-modulo">Per domande sull’iscrizione contatta <span data-evento="contatto"></span>.</p>
 </main>
 
 <footer class="piede">
   <div class="colonna piede-interno">
-    <div class="piede-blocco">
-      <p class="piede-etichetta">Informazioni</p>
-      <p>Per domande sull’iscrizione contatta <span data-evento="contatto"></span>.</p>
+    <div class="piede-blocco" data-piede-segreteria>
+      <p class="piede-etichetta">Segreteria</p>
+      <p><a href="secretariat.html" data-link-segreteria>Accesso al pannello segreteria</a></p>
     </div>
-    <div class="piede-blocco">
-      <p class="piede-etichetta">Navigazione</p>
-      <p><a id="link-home-piede" href="/">Torna all’elenco dei pellegrinaggi</a></p>
+    <div class="piede-blocco" data-piede-comunita hidden>
+      <p class="piede-etichetta">Comunità</p>
+      <p><a href="/" data-link-comunita>Tutte le comunità</a></p>
+    </div>
+    <div class="piede-blocco piede-portale" data-piede-portale hidden>
+      <p class="piede-etichetta">Piattaforma</p>
+      <a class="brand brand-piede" href="/" aria-label="Vieni e seguimi — portale">
+        <img class="brand-mark" src="img/logo-icona.png" width="32" height="32" alt="">
+        <span class="brand-testi">
+          <span class="brand-nome">Vieni e seguimi</span>
+          <span class="brand-sotto">Iscrizioni ai pellegrinaggi</span>
+        </span>
+      </a>
     </div>
     <div class="piede-meta">
       <p class="piede-copy">© 2026 <a href="https://github.com/davidemainardi" rel="noopener noreferrer" target="_blank">Davide Mainardi</a></p>

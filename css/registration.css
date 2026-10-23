@@ -694,20 +694,23 @@ fieldset.campo > legend, fieldset.scelta > legend {
   border-top: 1px solid var(--bordo);
   color: var(--grigio);
   font-size: .82rem;
-  padding: .55rem 0 calc(.55rem + env(safe-area-inset-bottom));
+  padding: 1rem 0 calc(.9rem + env(safe-area-inset-bottom));
 }
 #vista-modulo .piede {
   padding-bottom: calc(5rem + env(safe-area-inset-bottom));
 }
+/* Riga 1: gruppi di link a sinistra, marchio della piattaforma a destra.
+   Riga 2: separatore, © a sinistra, privacy e versione insieme a destra. */
 .piede-interno {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: .45rem .85rem;
-  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: .85rem 2.5rem;
 }
-.piede-blocco { min-width: 0; }
+.piede-blocco { min-width: 0; max-width: 22rem; }
+.piede-blocco[hidden] { display: none; }
 .piede-etichetta {
-  margin: 0 0 .1rem;
+  margin: 0 0 .2rem;
   font-size: .65rem;
   font-weight: 700;
   letter-spacing: .04em;
@@ -730,12 +733,18 @@ fieldset.campo > legend, fieldset.scelta > legend {
 }
 .piede-portale .brand-nome { font-size: .85rem; line-height: 1.2; }
 .piede-portale .brand-sotto { display: none; }
+.piede-portale { margin-left: auto; }
 .piede-meta {
-  grid-column: 1 / -1;
-  margin-top: .15rem;
-  padding-top: 0;
-  border-top: 0;
+  flex: 1 1 100%;
+  justify-content: flex-start;
+  gap: .25rem 1.5rem;
+  margin-top: .1rem;
+  padding-top: .7rem;
+  border-top: 1px solid var(--bordo);
 }
+.piede-meta .piede-copy { margin-right: auto; }
+/* Senza gruppi di link (portale) niente separatore sospeso */
+.piede-interno:not(:has(.piede-blocco:not([hidden]))) .piede-meta { border-top: 0; padding-top: 0; margin-top: 0; }
 
 /* =========================================================
    Tablet ≥ 640px
@@ -809,13 +818,9 @@ fieldset.campo > legend, fieldset.scelta > legend {
   .posto-grande { max-width: 20rem; padding: 1.15rem 1.25rem; }
   .posto-numero { font-size: 4.8rem; }
 
-  .piede { padding: .55rem 0 .6rem; }
-  #vista-modulo .piede { padding-bottom: .6rem; }
-  .piede-interno {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: .4rem 1.25rem;
-    align-items: start;
-  }
+  .piede { padding: 1.1rem 0 1rem; }
+  #vista-modulo .piede { padding-bottom: 1rem; }
+  .piede-interno { gap: .85rem 3rem; }
   .lista-edizioni { gap: .85rem; padding: 1.5rem 0 2.5rem; }
 }
 
@@ -970,3 +975,10 @@ fieldset.campo > legend, fieldset.scelta > legend {
   }
   .btn, .barra-passi .btn { min-height: 44px; }
 }
+@media (max-width: 639px) {
+  .piede-interno { gap: .75rem 1.5rem; }
+  .piede-blocco { flex: 1 1 9rem; }
+  .piede-portale { margin-left: 0; flex-basis: 100%; }
+}
+.contatto-modulo { margin: 1.25rem 0 0; text-align: center; color: var(--grigio); font-size: .9rem; }
+.contatto-modulo:has(span:empty) { display: none; }

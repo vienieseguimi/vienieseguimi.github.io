@@ -30,8 +30,7 @@
     if (h1) h1.textContent = 'Comunità';
     const meta = document.querySelector('.meta-home');
     if (meta) meta.textContent = 'Scegli la tua parrocchia o comunità pastorale.';
-    const piedeSeg = $('#piede-segreteria');
-    if (piedeSeg) piedeSeg.hidden = true;
+    document.querySelectorAll('[data-piede-segreteria]').forEach(el => { el.hidden = true; });
     // Console operatori: non pubblicizzata in home (URL noto solo agli operatori).
     try {
       const r = await platformApi('enti_attivi', {}, { timeoutMs: 15000 });
@@ -71,8 +70,7 @@
     $('#home-ente-mancante').hidden = false;
     const msg = $('#home-ente-mancante-msg');
     if (msg) msg.textContent = tenant.messaggio || msg.textContent;
-    const piedeSeg = $('#piede-segreteria');
-    if (piedeSeg) piedeSeg.hidden = true;
+    document.querySelectorAll('[data-piede-segreteria]').forEach(el => { el.hidden = true; });
     document.title = 'Vieni e seguimi · Comunità non trovata';
     return;
   }
@@ -92,8 +90,10 @@
     }
     const brandHome = $('#vista-home .brand');
     if (brandHome) brandHome.href = urlEnte(cfg.ente.subdomain, '/');
-    const linkSeg = $('#link-secretariat');
-    if (linkSeg) linkSeg.href = urlEnte(cfg.ente.subdomain, 'secretariat');
+    document.querySelectorAll('[data-link-segreteria]').forEach(a => { a.href = urlEnte(cfg.ente.subdomain, 'secretariat'); });
+    // Stesso footer su home della comunità e modulo: link al portale con tutte le comunità
+    document.querySelectorAll('[data-piede-comunita]').forEach(el => { el.hidden = false; });
+    document.querySelectorAll('[data-link-comunita]').forEach(a => { a.href = (cfg.basePath || '') + '/'; });
   }
 
   // ---- Home ente: elenco pellegrinaggi aperti
@@ -106,17 +106,6 @@
     if (indietro) {
       indietro.hidden = false;
       indietro.href = (cfg.basePath || '') + '/' || '/';
-    }
-    const piedePlat = $('#piede-piattaforma');
-    if (piedePlat) {
-      piedePlat.hidden = false;
-      const etichetta = piedePlat.querySelector('.piede-etichetta');
-      if (etichetta) etichetta.textContent = 'Comunità';
-      const a = piedePlat.querySelector('a');
-      if (a) {
-        a.href = (cfg.basePath || '') + '/' || '/';
-        a.textContent = 'Tutte le comunità';
-      }
     }
     api('edizioni_pubbliche', {}, { timeoutMs: 15000 }).then(r => {
       $('#home-caricamento').hidden = true;
@@ -148,7 +137,7 @@
   // ---- Modulo edizione
   $('#vista-modulo').hidden = false;
   const home = urlHome();
-  ['#link-altre', '#link-home-mancante', '#link-home-piede', '#link-home-testata', '#link-brand-modulo', '#pagina-iscrizione-torna'].forEach(s => {
+  ['#link-altre', '#link-home-mancante', '#link-home-testata', '#link-brand-modulo', '#pagina-iscrizione-torna'].forEach(s => {
     const a = $(s); if (a) a.href = home;
   });
   if (cfg.ente && cfg.ente.nome) {
