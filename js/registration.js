@@ -93,6 +93,12 @@
     // Informativa: titolare = nome giuridico dell'ente (se manca, il nome pubblico)
     const giuridico = String(cfg.ente.nomeGiuridico || cfg.ente.nome || '').trim();
     if (giuridico) document.querySelectorAll('[data-ente-giuridico]').forEach(el => { el.textContent = giuridico; });
+    // Email della segreteria dell'ente: accanto al contatto, nel footer e nell'informativa
+    const emailEnte = String(cfg.ente.email || '').trim();
+    if (emailEnte) {
+      document.querySelectorAll('[data-ente-email]').forEach(a => { a.href = 'mailto:' + emailEnte; a.textContent = emailEnte; });
+      document.querySelectorAll('[data-ente-email-box]').forEach(el => { el.hidden = false; });
+    }
     document.querySelectorAll('[data-link-segreteria]').forEach(a => { a.href = urlEnte(cfg.ente.subdomain, 'secretariat'); });
     // Stesso footer su home della comunità e modulo: link al portale con tutte le comunità
     document.querySelectorAll('[data-piede-comunita]').forEach(el => { el.hidden = false; });
@@ -197,9 +203,10 @@
         motivo.textContent = '';
       }
       const contatto = $('#pagina-iscrizione-contatto');
+      const emailContatto = String((cfg.ente && cfg.ente.email) || '').trim();
       contatto.textContent = ev.contatto
-        ? ('Per domande contatta ' + ev.contatto + '.')
-        : '';
+        ? ('Per domande contatta ' + ev.contatto + (emailContatto ? ' (' + emailContatto + ')' : '') + '.')
+        : (emailContatto ? 'Per domande scrivi a ' + emailContatto + '.' : '');
       const partBox = $('#pagina-iscrizione-partecipanti');
       const partLista = $('#pagina-iscrizione-partecipanti-lista');
       const partecipanti = r.partecipanti || [];

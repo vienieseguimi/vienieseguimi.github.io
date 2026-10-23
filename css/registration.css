@@ -980,5 +980,74 @@ fieldset.campo > legend, fieldset.scelta > legend {
   .piede-blocco { flex: 1 1 9rem; }
   .piede-portale { margin-left: 0; flex-basis: 100%; }
 }
-.contatto-modulo { margin: 1.25rem 0 0; text-align: center; color: var(--grigio); font-size: .9rem; }
-.contatto-modulo:has(span:empty) { display: none; }
+.piede-contatto:has([data-evento="contatto"]:empty) { display: none; }
+
+/* =========================================================
+   Testata del modulo: marchio dell'ente, poi il pellegrinaggio
+   (titolo, meta con la freccia del segnavia, fatti in riquadri)
+   ========================================================= */
+#vista-modulo .testata-brand-riga {
+  padding-bottom: .65rem;
+  margin-bottom: .8rem;
+  border-bottom: 1px solid rgba(255, 255, 255, .1);
+}
+#vista-modulo .testata-griglia { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: none; gap: .85rem; max-width: none; }
+#vista-modulo .testata-titoli { grid-area: auto; }
+#vista-modulo .testata h1.titolo-evento,
+#vista-modulo h1.titolo-evento {
+  margin: 0;
+  font-size: clamp(1.35rem, 5vw, 1.9rem);
+  line-height: 1.15;
+  letter-spacing: -.015em;
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+.meta-evento {
+  display: flex; align-items: baseline; gap: .45rem;
+  margin: .4rem 0 0;
+  font-size: .98rem; font-weight: 700; color: #dfe4ec;
+  overflow-wrap: anywhere;
+}
+.meta-evento::before {
+  content: ''; flex: none;
+  width: 1.1rem; height: .55rem;
+  background: var(--segnavia);
+  clip-path: polygon(0 32%, 62% 32%, 62% 0, 100% 50%, 62% 100%, 62% 68%, 0 68%);
+}
+.meta-evento:has([data-evento="meta"]:empty) { display: none; }
+
+#vista-modulo .fatti {
+  grid-area: auto;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin: 0;
+  padding: 0;
+}
+#vista-modulo .fatti > .fatto {
+  display: block;
+  flex: 1 1 8.5rem;
+  padding: .5rem .75rem .55rem;
+  background: rgba(255, 255, 255, .07);
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 10px;
+}
+#vista-modulo .fatti > .fatto:has(dd:empty) { display: none; }
+#vista-modulo .fatti > .fatto-scadenza { border-left: 4px solid var(--segnavia); }
+#vista-modulo .fatti dt {
+  margin: 0 0 .15rem;
+  font-size: .7rem; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: #b9c2d1;
+}
+#vista-modulo .fatti dt::after { content: none; }
+#vista-modulo .fatti dd {
+  margin: 0;
+  font-size: 1rem; font-weight: 700; line-height: 1.3;
+  color: #fff;
+}
+@media (min-width: 640px) {
+  #vista-modulo .fatti { gap: .6rem; }
+  #vista-modulo .fatti > .fatto { flex: 0 1 auto; min-width: 10rem; padding: .55rem .95rem .6rem; }
+}

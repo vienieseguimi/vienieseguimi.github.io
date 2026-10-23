@@ -91,6 +91,7 @@
       $('#ente-id').value = ente.id;
       $('#ente-nome').value = ente.nome;
       $('#ente-giuridico').value = ente.nomeGiuridico || '';
+      $('#ente-email').value = ente.email || '';
       $('#ente-logo').value = ente.logoUrl || '';
       aggiornaAnteprimaLogo();
       $('#ente-sub').value = ente.subdomain;
@@ -268,6 +269,7 @@
           id: $('#ente-id').value || undefined,
           nome: $('#ente-nome').value.trim(),
           nomeGiuridico: $('#ente-giuridico').value.trim(),
+          email: $('#ente-email').value.trim(),
           logoUrl: $('#ente-logo').value.trim(),
           subdomain: $('#ente-sub').value.trim().toLowerCase(),
           apiUrl: $('#ente-api').value.trim(),

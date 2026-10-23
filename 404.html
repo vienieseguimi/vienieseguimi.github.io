@@ -140,15 +140,13 @@
     </div>
     <div class="testata-griglia">
       <div class="testata-titoli">
-        <h1>
-          <span class="meta" data-evento="meta"></span>
-          <span class="titolo-evento" data-evento="titolo"></span>
-        </h1>
+        <h1 class="titolo-evento" data-evento="titolo"></h1>
+        <p class="meta-evento"><span class="visually-hidden">Meta: </span><span data-evento="meta"></span></p>
       </div>
       <dl class="fatti">
-        <div><dt>Quando</dt><dd data-evento="quando"></dd></div>
-        <div><dt>Quota</dt><dd data-evento="quota"></dd></div>
-        <div><dt>Iscrizioni</dt><dd data-evento="scadenza"></dd></div>
+        <div class="fatto"><dt>Quando</dt><dd data-evento="quando"></dd></div>
+        <div class="fatto"><dt>Quota</dt><dd data-evento="quota"></dd></div>
+        <div class="fatto fatto-scadenza"><dt>Iscrizioni</dt><dd data-evento="scadenza"></dd></div>
       </dl>
     </div>
   </div>
@@ -396,7 +394,7 @@
             <p><strong>A cosa servono.</strong> Solo a organizzare questo pellegrinaggio: gestire l’iscrizione, prenotare viaggio e alloggio, scriverti per le comunicazioni. Le esigenze alimentari o di salute servono solo se le indichi tu e solo per organizzare il viaggio.</p>
             <p><strong>Chi li vede.</strong> La segreteria parrocchiale e, solo per quanto serve, l’agenzia di viaggio e le strutture che ci ospitano. Non li diamo a nessun altro e non li usiamo per altro.</p>
             <p><strong>Per quanto tempo.</strong> Fino alla chiusura amministrativa del pellegrinaggio; poi li cancelliamo.</p>
-            <p><strong>I tuoi diritti.</strong> Puoi chiedere in ogni momento di vedere i tuoi dati, correggerli o cancellarli scrivendo a <span data-evento="contatto"></span>.</p>
+            <p><strong>I tuoi diritti.</strong> Puoi chiedere in ogni momento di vedere i tuoi dati, correggerli o cancellarli scrivendo a <span data-evento="contatto"></span><span data-ente-email-box hidden> (<a data-ente-email href="#"></a>)</span>.</p>
           </details>
         </div>
       </div>
@@ -472,11 +470,14 @@
     </div>
   </section>
 
-  <p class="contatto-modulo">Per domande sull’iscrizione contatta <span data-evento="contatto"></span>.</p>
 </main>
 
 <footer class="piede">
   <div class="colonna piede-interno">
+    <div class="piede-blocco piede-contatto" data-piede-contatto>
+      <p class="piede-etichetta">Informazioni</p>
+      <p>Per domande sull’iscrizione contatta <span data-evento="contatto"></span><span data-ente-email-box hidden> (<a data-ente-email href="#"></a>)</span>.</p>
+    </div>
     <div class="piede-blocco" data-piede-segreteria>
       <p class="piede-etichetta">Segreteria</p>
       <p><a href="secretariat.html" data-link-segreteria>Accesso al pannello segreteria</a></p>
