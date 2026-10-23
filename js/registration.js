@@ -90,6 +90,9 @@
     }
     const brandHome = $('#vista-home .brand');
     if (brandHome) brandHome.href = urlEnte(cfg.ente.subdomain, '/');
+    // Informativa: titolare = nome giuridico dell'ente (se manca, il nome pubblico)
+    const giuridico = String(cfg.ente.nomeGiuridico || cfg.ente.nome || '').trim();
+    if (giuridico) document.querySelectorAll('[data-ente-giuridico]').forEach(el => { el.textContent = giuridico; });
     document.querySelectorAll('[data-link-segreteria]').forEach(a => { a.href = urlEnte(cfg.ente.subdomain, 'secretariat'); });
     // Stesso footer su home della comunità e modulo: link al portale con tutte le comunità
     document.querySelectorAll('[data-piede-comunita]').forEach(el => { el.hidden = false; });

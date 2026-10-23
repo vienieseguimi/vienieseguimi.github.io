@@ -90,6 +90,7 @@
       $('#form-titolo').textContent = 'Modifica ente';
       $('#ente-id').value = ente.id;
       $('#ente-nome').value = ente.nome;
+      $('#ente-giuridico').value = ente.nomeGiuridico || '';
       $('#ente-logo').value = ente.logoUrl || '';
       aggiornaAnteprimaLogo();
       $('#ente-sub').value = ente.subdomain;
@@ -266,6 +267,7 @@
         ente: {
           id: $('#ente-id').value || undefined,
           nome: $('#ente-nome').value.trim(),
+          nomeGiuridico: $('#ente-giuridico').value.trim(),
           logoUrl: $('#ente-logo').value.trim(),
           subdomain: $('#ente-sub').value.trim().toLowerCase(),
           apiUrl: $('#ente-api').value.trim(),
