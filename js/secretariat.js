@@ -1090,6 +1090,7 @@
   }
 
   function apriFormEdizione(ed) {
+    ritornoFocus = document.activeElement;
     $('#ed-errore').hidden = true;
     $('#ed-titolo').textContent = ed ? 'Impostazioni' : 'Nuovo pellegrinaggio';
     $('#ed-form-titolo').textContent = ed ? 'Modifica pellegrinaggio' : 'Nuovo pellegrinaggio';
@@ -1120,18 +1121,24 @@
     }
     renderDocumentiEdizione(ed ? (ed.documenti || []) : []);
     $('#pannello-edizioni').hidden = false;
-    $('#pannello-edizioni').focus();
+    document.body.classList.add('con-dialogo-edizioni');
+    const box = $('#ed-dialogo');
+    if (box) box.focus();
   }
 
   function chiudiEdizioni() {
     const pan = $('#pannello-edizioni');
     if (pan) pan.hidden = true;
+    document.body.classList.remove('con-dialogo-edizioni');
+    if (ritornoFocus && document.contains(ritornoFocus)) ritornoFocus.focus();
   }
   $('#gestisci-edizioni').addEventListener('click', () => {
     const ed = s.edizioni.find(e => e.slug === s.slug);
     if (ed) apriFormEdizione(ed);
   });
   $('#ed-chiudi').addEventListener('click', chiudiEdizioni);
+  const edSfondo = $('#ed-sfondo');
+  if (edSfondo) edSfondo.addEventListener('click', chiudiEdizioni);
   $('#ed-setup').addEventListener('click', async () => {
     if (!window.confirm('Eseguire la manutenzione (setup)? Allinea fogli, cartelle Drive e trigger. Di solito serve dopo un aggiornamento del sistema.')) return;
     const btn = $('#ed-setup');

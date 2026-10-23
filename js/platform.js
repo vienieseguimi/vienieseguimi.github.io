@@ -31,9 +31,26 @@
   }
 
   async function caricaEnti() {
-    const r = await platformApi('enti_elenco', { token: s.token });
-    s.enti = r.enti || [];
-    render();
+    try {
+      const r = await platformApi('enti_elenco', { token: s.token });
+      s.enti = r.enti || [];
+      const vuoto = $('#lista-vuota');
+      if (vuoto) {
+        vuoto.classList.remove('plat-msg', 'err');
+        vuoto.textContent = 'Nessun ente ancora. Crea il primo con «Nuovo ente».';
+      }
+      render();
+    } catch (ex) {
+      if (ex.codice === 'non_autorizzato') throw ex;
+      s.enti = [];
+      render();
+      const vuoto = $('#lista-vuota');
+      if (vuoto) {
+        vuoto.hidden = false;
+        vuoto.textContent = ex.message || 'Non riesco a caricare gli enti.';
+        vuoto.classList.add('plat-msg', 'err');
+      }
+    }
   }
 
   function render() {

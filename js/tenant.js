@@ -74,7 +74,9 @@
       clearTimeout(timer);
     }
     if (!risposta || risposta.ok !== true) {
-      const e = new Error((risposta && risposta.messaggio) || 'Errore piattaforma.');
+      const msg = (risposta && risposta.messaggio) || 'Errore piattaforma.';
+      const det = risposta && risposta.dettaglio ? ' (' + risposta.dettaglio + ')' : '';
+      const e = new Error(msg + det);
       e.codice = (risposta && risposta.errore) || 'sconosciuto';
       e.dati = risposta || {};
       throw e;
