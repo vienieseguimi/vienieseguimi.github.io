@@ -48,17 +48,19 @@
     edizione_salvata: '{operatore} ha salvato il pellegrinaggio «{titolo}»{slug_suffisso}',
     login_ok: '{operatore} ha aperto la segreteria',
     setup_eseguito: '{operatore} ha eseguito la manutenzione (setup)',
+    email_coda_inviata: '{operatore} ha inviato le email in coda ({inviate})',
   };
 
   const s = {
     token: null, nome: '',
-    vista: 'home', // 'home' | 'gestione'
+    vista: 'home', // 'home' | 'gestione' | 'posta'
     slug: '', edizioni: [], evento: null,
     versione: 0, caricato: false, righe: new Map(),
     filtro: 'in_attesa', cerca: '', parr: '',
     selezionato: null, occupate: new Set(), evidenzia: new Map(),
     nonViste: 0, errori: 0, timer: null, inCorso: false, ultimoOk: null,
     attivita: [], attivitaTimer: null, attivitaInCorso: false,
+    posta: { email: [], scelta: null, quota: null, inCoda: 0 },
   };
 
   const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -227,6 +229,7 @@
 
     $('#vista-home').hidden = false;
     $('#vista-gestione').hidden = true;
+    $('#vista-posta').hidden = true;
     $('#barra-nav-gestione').hidden = true;
     $('#live').hidden = true;
     $('#barra-apertura').hidden = true;
@@ -234,6 +237,7 @@
     document.title = 'Segreteria · Vieni e seguimi';
     renderHomeEdizioni();
     programmaAttivita();
+    caricaStatoPosta();
   }
 
   async function apriGestione(slug, opz) {
@@ -259,6 +263,7 @@
     history.replaceState(null, '', url.pathname + '?' + url.searchParams.toString());
 
     $('#vista-home').hidden = true;
+    $('#vista-posta').hidden = true;
     $('#vista-gestione').hidden = false;
     $('#barra-nav-gestione').hidden = false;
     $('#live').hidden = false;
@@ -268,6 +273,7 @@
     render();
     await aggiorna();
     programmaAttivita();
+    caricaStatoPosta();
   }
 
   async function selezionaEdizione(slug) {
@@ -284,6 +290,8 @@
     $('#vista-app').hidden = true;
     $('#vista-home').hidden = true;
     $('#vista-gestione').hidden = true;
+    $('#vista-posta').hidden = true;
+    $('#posta-chip').hidden = true;
     $('#dettaglio').hidden = true;
     chiudiEdizioni();
     $('#vista-accesso').hidden = false;
@@ -330,6 +338,187 @@
   }
 
   $('#torna-home').addEventListener('click', () => mostraHome());
+
+  // ================= Posta =================
+  const TIPO_EMAIL = { ricevuta: 'Ricevuta', confermata: 'Conferma', rifiutata: 'Non confermata' };
+
+  function classeEsito(esito) {
+    if (esito === 'inviata') return 's-confermata';
+    if (/^errore/.test(esito)) return 's-rifiutata';
+    return 's-lista_attesa';
+  }
+  function testoEsito(esito) {
+    if (esito === 'inviata') return 'Inviata';
+    if (/^errore/.test(esito)) return 'Errore, riprova';
+    return 'In coda';
+  }
+
+  function renderStatoPosta() {
+    const p = s.posta;
+    const quota = typeof p.quota === 'number' ? p.quota : null;
+    $('#posta-quota').textContent = quota == null ? '—' : String(quota);
+    $('#posta-coda').textContent = String(p.inCoda || 0);
+    const chip = $('#posta-chip');
+    if (quota != null) {
+      chip.textContent = 'Email oggi: ' + quota + (p.inCoda ? ' · in coda ' + p.inCoda : '');
+      chip.classList.toggle('attenzione', quota < 10 || p.inCoda > 0);
+      chip.hidden = false;
+    }
+    const nota = $('#posta-nota');
+    let testo = '';
+    if (quota === 0) testo = 'Le email di oggi sono finite: quelle nuove restano in coda e partono da sole domani.';
+    else if (quota != null && quota < 10) testo = 'Restano poche email per oggi.';
+    else if (p.inCoda) testo = 'Partono da sole entro un’ora, oppure inviale adesso.';
+    nota.textContent = testo;
+    nota.hidden = !testo;
+    $('#posta-invia-coda').hidden = !(p.inCoda > 0 && quota !== 0);
+  }
+
+  async function caricaStatoPosta() {
+    if (!s.token) return;
+    try {
+      const r = await api('posta_stato', { token: s.token });
+      s.posta.quota = r.quota; s.posta.inCoda = r.inCoda || 0;
+      renderStatoPosta();
+    } catch (err) {
+      if (err.codice === 'non_autorizzato') mostraAccesso(err.message);
+    }
+  }
+
+  function rigaPostaHtml(e) {
+    const scelta = s.posta.scelta === e.id;
+    return `<li><button type="button" class="posta-voce${scelta ? ' scelta' : ''}" data-email="${esc(e.id)}" aria-current="${scelta}">
+      <span class="posta-voce-chi">${esc(e.nome || e.destinatario)}</span>
+      <span class="posta-voce-quando">${esc(quando(e.creato_il))}</span>
+      <span class="posta-voce-oggetto">${esc(e.oggetto)}</span>
+      <span class="posta-voce-pillole">
+        <span class="pillola ${classeEsito(e.esito)}">${esc(testoEsito(e.esito))}</span>
+        <span class="posta-voce-tipo">${esc(TIPO_EMAIL[e.tipo] || e.tipo)} · ${esc(e.codice)}</span>
+      </span>
+    </button></li>`;
+  }
+
+  function renderPosta() {
+    const lista = s.posta.email;
+    $('#posta-lista').innerHTML = lista.map(rigaPostaHtml).join('');
+    $('#posta-vuota').hidden = lista.length > 0;
+    const inviate = lista.filter(e => e.esito === 'inviata').length;
+    $('#posta-riepilogo').textContent = lista.length
+      ? (lista.length + ' email · ' + inviate + (inviate === 1 ? ' inviata' : ' inviate') +
+        (typeof s.posta.quota === 'number' ? ' · puoi inviarne ancora ' + s.posta.quota + ' oggi' : ''))
+      : '';
+  }
+
+  async function caricaPosta() {
+    const lista = $('#posta-lista');
+    lista.setAttribute('aria-busy', 'true');
+    try {
+      const r = await api('posta_elenco', {
+        token: s.token, slug: $('#posta-ed').value, cerca: $('#posta-cerca').value.trim(), limite: 200,
+      });
+      s.posta.email = r.email || [];
+      s.posta.quota = r.quota; s.posta.inCoda = r.inCoda || 0;
+      renderPosta();
+      renderStatoPosta();
+    } catch (err) {
+      if (err.codice === 'non_autorizzato') return mostraAccesso(err.message);
+      avviso(err.message || 'Impossibile caricare la posta.', 'errore');
+    } finally {
+      lista.removeAttribute('aria-busy');
+    }
+  }
+
+  async function apriEmail(id) {
+    s.posta.scelta = id;
+    renderPosta();
+    const e = s.posta.email.find(x => x.id === id);
+    if (!e) return;
+    $('#posta-caselle').classList.add('con-lettura');
+    $('#posta-lettura-testa').hidden = false;
+    $('#posta-oggetto').textContent = e.oggetto;
+    $('#posta-meta').textContent = 'A ' + (e.nome ? e.nome + ' <' + e.destinatario + '>' : e.destinatario) +
+      ' · ' + new Date(e.creato_il).toLocaleString('it-IT', { dateStyle: 'medium', timeStyle: 'short' }) +
+      ' · ' + testoEsito(e.esito);
+    $('#posta-scegli').hidden = true;
+    const frame = $('#posta-anteprima');
+    try {
+      const r = await api('posta_email', { token: s.token, id });
+      if (s.posta.scelta !== id) return;
+      const html = r.email.html || '<p style="font-family:sans-serif;color:#545d72">Anteprima non disponibile per questa email.</p>';
+      // I link dell'email si aprono in una nuova scheda; niente script (sandbox).
+      frame.srcdoc = html.replace(/<head>/i, '<head><base target="_blank">');
+      frame.hidden = false;
+    } catch (err) {
+      if (err.codice === 'non_autorizzato') return mostraAccesso(err.message);
+      frame.hidden = true;
+      avviso(err.message || 'Impossibile aprire l’email.', 'errore');
+    }
+  }
+
+  function chiudiEmail() {
+    s.posta.scelta = null;
+    $('#posta-caselle').classList.remove('con-lettura');
+    $('#posta-lettura-testa').hidden = true;
+    $('#posta-anteprima').hidden = true;
+    $('#posta-scegli').hidden = false;
+    renderPosta();
+  }
+
+  function mostraPosta() {
+    s.vista = 'posta';
+    fermaAggiornamenti();
+    s.slug = '';
+    $('#dettaglio').hidden = true;
+    document.body.classList.remove('con-dettaglio');
+    chiudiEdizioni();
+    $('#vista-home').hidden = true;
+    $('#vista-gestione').hidden = true;
+    $('#vista-posta').hidden = false;
+    $('#barra-nav-gestione').hidden = true;
+    $('#live').hidden = true;
+    $('#barra-apertura').hidden = true;
+    $('#barra-h1').textContent = 'Posta';
+    document.title = 'Posta · Segreteria · Vieni e seguimi';
+    const sel = $('#posta-ed');
+    const attuale = sel.value;
+    sel.innerHTML = '<option value="">Tutti i pellegrinaggi</option>' +
+      s.edizioni.map(e => `<option value="${esc(e.slug)}">${esc(e.titolo || e.slug)}</option>`).join('');
+    sel.value = attuale;
+    chiudiEmail();
+    caricaPosta();
+  }
+
+  $('#posta-apri').addEventListener('click', mostraPosta);
+  $('#posta-chip').addEventListener('click', mostraPosta);
+  $('#posta-torna').addEventListener('click', () => mostraHome());
+  $('#posta-aggiorna').addEventListener('click', caricaPosta);
+  $('#posta-ed').addEventListener('change', caricaPosta);
+  let timerCercaPosta = null;
+  $('#posta-cerca').addEventListener('input', () => {
+    clearTimeout(timerCercaPosta);
+    timerCercaPosta = setTimeout(caricaPosta, 350);
+  });
+  $('#posta-lista').addEventListener('click', e => {
+    const b = e.target.closest('[data-email]');
+    if (b) apriEmail(b.dataset.email);
+  });
+  $('#posta-indietro').addEventListener('click', chiudiEmail);
+  $('#posta-invia-coda').addEventListener('click', async ev => {
+    const btn = ev.currentTarget;
+    btn.disabled = true;
+    try {
+      const r = await api('posta_invia_coda', { token: s.token }, { timeoutMs: 120000 });
+      s.posta.quota = r.quota; s.posta.inCoda = r.inCoda || 0;
+      renderStatoPosta();
+      avviso(r.inviate ? 'Email inviate: ' + r.inviate + '.' : 'Nessuna email partita: riprova più tardi.', r.inviate ? '' : 'errore');
+      caricaAttivita();
+    } catch (err) {
+      if (err.codice === 'non_autorizzato') return mostraAccesso(err.message);
+      avviso(err.message || 'Invio non riuscito.', 'errore');
+    } finally {
+      btn.disabled = false;
+    }
+  });
   $('#home-nuovo').addEventListener('click', () => apriFormEdizione(null));
   $('#home-lista').addEventListener('click', e => {
     const btn = e.target.closest('[data-home]');
@@ -351,7 +540,7 @@
     clearTimeout(s.attivitaTimer); s.attivitaTimer = null;
     if (!s.token || document.hidden) return;
     s.attivitaTimer = setTimeout(function () {
-      caricaAttivita().finally(programmaAttivita);
+      Promise.all([caricaAttivita(), caricaStatoPosta()]).finally(programmaAttivita);
     }, Math.max(30000, (cfg.intervalloAggiornamento || 5000) * 6));
   }
 
@@ -590,7 +779,7 @@
     } else if (r.stato === 'lista_attesa') {
       const pieni = postiLiberi() <= 0;
       azione = `<button type="button" class="btn btn-secondario btn-piccolo" data-azione="promuovi" ${occ || pieni ? 'disabled' : ''}
-           ${pieni ? 'title="Posti esauriti"' : 'title="Passa tra le da gestire"'}>Promuovi</button>`;
+           ${pieni ? 'title="Posti esauriti"' : 'title="Rimetti tra le da gestire"'}>Rimetti</button>`;
     }
     return `
       <td class="c-codice" title="${esc(r.codice)}">
@@ -680,6 +869,7 @@
         const email = opz.notifica === false || !['confermata', 'rifiutata'].includes(out.riga.stato) ? ''
           : coda ? ' L\'email è in coda: partirà appena possibile.' : ' Email inviata.';
         avviso(nomeDi(out.riga) + ': ' + (STATO[out.riga.stato] || '').toLowerCase() + '.' + email);
+        caricaStatoPosta();
       }
       return true;
     } catch (err) {
@@ -755,7 +945,7 @@
     }
     if (r.stato === 'lista_attesa') {
       az.push(`<button type="button" class="btn btn-secondario" data-det="in_attesa" ${occ || pieni ? 'disabled' : ''}
-        ${pieni ? 'title="Posti esauriti"' : ''}>Promuovi tra le da gestire</button>`);
+        ${pieni ? 'title="Posti esauriti"' : ''}>Rimetti tra le da gestire</button>`);
     }
     if (r.stato === 'in_attesa' || r.stato === 'confermata') {
       az.push(`<button type="button" class="btn btn-secondario" data-det="lista_attesa" ${occ ? 'disabled' : ''}>Metti in lista d’attesa</button>`);
@@ -797,7 +987,7 @@
     $('#det-dati').innerHTML = dati.map(d => `<div><dt>${esc(d[0])}</dt><dd>${d[2] ? d[1] : esc(d[1])}</dd></div>`).join('');
 
     $('#det-storico').innerHTML = [
-      ['Iscritta il', new Date(r.creato_il).toLocaleString('it-IT', { dateStyle: 'medium', timeStyle: 'short' })],
+      ['Arrivata il', new Date(r.creato_il).toLocaleString('it-IT', { dateStyle: 'medium', timeStyle: 'short' })],
       ['Email', r.email_log ? r.email_log.split(' | ').join('\n') : 'nessuna'],
       ['Consenso', r.consenso_privacy],
     ].map(d => `<div><dt>${esc(d[0])}</dt><dd>${esc(d[1])}</dd></div>`).join('');
@@ -855,7 +1045,7 @@
       ['data_nascita', 'Data di nascita'], ['email', 'Email'], ['telefono', 'Telefono'], ['indirizzo', 'Indirizzo'], ['comune', 'Comune di residenza'],
       ['sistemazione', 'Camera'], ['ruolo_gruppo', 'Ruolo gruppo'], ['gruppo_id', 'Gruppo'],
       ['compagno_camera', 'In camera con'], ['tutore', 'Tutore'], ['esigenze', 'Esigenze'],
-      ['note', 'Note persona'], ['note_segreteria', 'Note segreteria'], ['creato_il', 'Iscritta il'], ['gestito_da', 'Gestita da'],
+      ['note', 'Note persona'], ['note_segreteria', 'Note segreteria'], ['creato_il', 'Arrivata il'], ['gestito_da', 'Gestita da'],
     ];
     // Neutralizza le formule (CSV/formula injection): Excel esegue celle che iniziano con = + - @ tab o CR.
     const cella = v => {

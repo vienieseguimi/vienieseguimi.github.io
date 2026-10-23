@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Vieni e seguimi — iscrizioni ai pellegrinaggi</title>
 <meta name="description" content="Vieni e seguimi: iscrizioni ai pellegrinaggi della parrocchia.">
@@ -382,7 +382,7 @@
 
       <div class="gruppo passo-pannello" id="passo-invio" data-passo="3" hidden>
         <h2 class="titolo-passo">Conferma e invia</h2>
-        <p class="aiuto-passo">Controlla il consenso e invia l’iscrizione. Potrai iscrivere un’altra persona subito dopo.</p>
+        <p class="aiuto-passo">Controlla il consenso e invia l’iscrizione.</p>
 
         <div class="campo consenso" data-campo="consenso_privacy">
           <p class="messaggio-errore" id="consenso_privacy-errore"></p>
@@ -430,14 +430,10 @@
       <p class="ricevuta-nota">Quell’email è solo un riepilogo: <strong>non è ancora la conferma</strong> dell’iscrizione.</p>
       <p id="ricevuta-seguito">La segreteria controllerà la pratica e ti scriverà quando l’iscrizione sarà confermata. Per ora non devi fare altro.</p>
       <p class="ricevuta-compagno aiuto" id="ricevuta-compagno" hidden></p>
-      <p class="ricevuta-link aiuto" id="ricevuta-link-box" hidden>
-        La tua pagina iscrizione (stato e documenti):
-        <a id="ricevuta-link" href="#" rel="noopener"></a>
-      </p>
     </div>
-    <div class="azioni-ricevuta">
-      <button type="button" class="btn" id="altra">Iscrivi un’altra persona</button>
-      <p class="aiuto">Email, telefono e indirizzo restano compilati.</p>
+    <div class="azioni-ricevuta" id="ricevuta-link-box" hidden>
+      <a class="btn" id="ricevuta-link" href="#">Vedi la tua iscrizione</a>
+      <p class="aiuto">Qui trovi sempre lo stato dell’iscrizione e i documenti. Lo stesso link è nell’email.</p>
     </div>
   </section>
 

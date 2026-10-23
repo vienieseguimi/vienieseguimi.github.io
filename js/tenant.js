@@ -110,6 +110,13 @@
     });
     document.querySelectorAll('[data-brand-logo]').forEach(function (img) {
       if (conLogoOrg) {
+        // Se il logo non si carica (link rotto o file tolto da Drive) torna quello del portale.
+        img.onerror = function () {
+          img.onerror = null;
+          img.src = LOGO_PORTALE;
+          img.alt = '';
+          delete img.dataset.logoEnte;
+        };
         img.src = logoOrg;
         img.alt = nome;
         img.dataset.logoEnte = '1';

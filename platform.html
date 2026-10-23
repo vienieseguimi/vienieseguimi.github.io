@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="robots" content="noindex, nofollow">
 <title>Vieni e seguimi · Piattaforma</title>
@@ -78,18 +78,27 @@
         <input type="text" id="ente-nome" maxlength="120" required>
       </div>
       <div class="campo">
-        <label for="ente-logo">URL logo <span class="facoltativo">(facoltativo)</span></label>
-        <span class="aiuto">Immagine https://… Comparirà nell’header delle pagine /ente/; il logo di Vieni e seguimi resta nel footer.</span>
-        <input type="url" id="ente-logo" maxlength="500" spellcheck="false" placeholder="https://…">
+        <span class="etichetta" id="ente-logo-etichetta">Logo <span class="facoltativo">(facoltativo)</span></span>
+        <span class="aiuto">PNG, JPG, WebP o SVG (viene ridotta a 256 px). Comparirà nell’header delle pagine /ente/; il logo di Vieni e seguimi resta nel footer.</span>
+        <div class="logo-campo" role="group" aria-labelledby="ente-logo-etichetta">
+          <div class="logo-anteprima vuota" id="ente-logo-anteprima" aria-hidden="true"><img alt="" hidden></div>
+          <div class="logo-azioni">
+            <label class="btn btn-secondario" for="ente-logo-file">Carica logo</label>
+            <input type="file" id="ente-logo-file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>
+            <button type="button" class="btn btn-secondario" id="ente-logo-rimuovi" hidden>Rimuovi</button>
+          </div>
+        </div>
+        <input type="hidden" id="ente-logo" value="" aria-describedby="ente-logo-msg">
+        <p id="ente-logo-msg" class="plat-msg" hidden></p>
       </div>
       <div class="campo">
         <label for="ente-sub">Percorso URL</label>
         <span class="aiuto">Indirizzo pubblico: /<strong id="hint-path">vanzago</strong>/ (solo lettere minuscole, numeri e trattini)</span>
-        <input type="text" id="ente-sub" maxlength="48" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" spellcheck="false">
+        <input type="text" id="ente-sub" maxlength="48" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" spellcheck="false" autocomplete="off">
       </div>
       <div class="campo">
         <label for="ente-api">URL web app Apps Script (/exec)</label>
-        <input type="url" id="ente-api" maxlength="300" required spellcheck="false">
+        <input type="url" id="ente-api" maxlength="300" required spellcheck="false" autocomplete="off">
       </div>
       <div class="campo">
         <label class="opzione"><input type="checkbox" id="ente-attivo" checked> Attivo</label>

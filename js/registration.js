@@ -787,7 +787,6 @@
     const linkA = $('#ricevuta-link');
     if (linkBox && linkA && urlPagina) {
       linkA.href = urlPagina;
-      linkA.textContent = urlPagina;
       linkBox.hidden = false;
     } else if (linkBox) {
       linkBox.hidden = true;
@@ -799,7 +798,8 @@
     r.focus();
   }
 
-  $('#altra').addEventListener('click', () => {
+  const btnAltra = $('#altra');
+  if (btnAltra) btnAltra.addEventListener('click', () => {
     modulo.reset();
     imposta(ultimiContatti);
     mostraErrori({});

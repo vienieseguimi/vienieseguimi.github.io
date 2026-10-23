@@ -112,6 +112,25 @@ body {
   margin-bottom: 1.25rem;
 }
 .plat-form h2 { font-size: 1.1rem; margin: 0 0 .85rem; }
+/* Tutti i campi testo/url stessi: larghezza piena, stesso bordo e raggio (niente input “corti”). */
+.plat-form .campo > input[type=text],
+.plat-form .campo > input[type=url],
+.plat-form .campo > input[type=password],
+.plat-form .campo > input[type=email],
+.plat-box .campo > input[type=text],
+.plat-box .campo > input[type=password] {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  min-height: 44px;
+  padding: .45rem .7rem;
+  border: 1.5px solid var(--bordo);
+  border-radius: var(--r-campo);
+  background: var(--carta);
+  color: var(--inchiostro);
+  font: inherit;
+}
 .plat-msg { margin: .6rem 0 0; font-weight: 700; }
 .plat-msg.err { color: var(--rifiuto); }
 .plat-msg.ok { color: var(--timbro); }
@@ -136,3 +155,27 @@ body {
   width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
   clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
+
+/* Logo dell'ente: anteprima + carica/rimuovi (URL salvato in campo nascosto) */
+.logo-campo {
+  display: flex; align-items: center; gap: .85rem; flex-wrap: wrap;
+  margin: .15rem 0 .35rem;
+  padding: .85rem 1rem;
+  border: 1.5px solid var(--bordo);
+  border-radius: var(--r-campo);
+  background: var(--pietra);
+  box-sizing: border-box;
+  width: 100%;
+}
+.logo-anteprima {
+  width: 64px; height: 64px; flex: none;
+  display: grid; place-items: center;
+  border: 1.5px solid var(--bordo); border-radius: var(--r-campo);
+  background: var(--carta); overflow: hidden;
+}
+.logo-anteprima img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.logo-anteprima.vuota { border-style: dashed; background: var(--pietra); }
+.logo-azioni { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.logo-azioni label.btn { cursor: pointer; margin: 0; }
+.logo-azioni label.btn.in-corso,
+.logo-azioni .btn.in-corso { opacity: .6; pointer-events: none; }
