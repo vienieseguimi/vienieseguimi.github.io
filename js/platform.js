@@ -59,6 +59,7 @@
         '<a class="btn btn-secondario btn-piccolo" href="' + esc(urlEnte(e.subdomain, '/')) + '" target="_blank" rel="noopener">Sito</a>' +
         '<a class="btn btn-secondario btn-piccolo" href="' + esc(urlEnte(e.subdomain, 'secretariat')) + '" target="_blank" rel="noopener">Segreteria</a>' +
         '<button type="button" class="btn btn-piccolo" data-edit="' + esc(e.id) + '">Modifica</button>' +
+        '<button type="button" class="btn btn-secondario btn-piccolo" data-setup="' + esc(e.id) + '" title="Esegue setup sul backend Apps Script dell’ente">Esegui setup</button>' +
         '<button type="button" class="btn btn-secondario btn-piccolo" data-toggle="' + esc(e.id) + '">' +
         (e.attivo ? 'Disattiva' : 'Attiva') + '</button>' +
         '</div></article>';
@@ -164,6 +165,26 @@
     if (edit) {
       const ente = s.enti.find(x => x.id === edit.getAttribute('data-edit'));
       if (ente) apriForm(ente);
+      return;
+    }
+    const setupBtn = ev.target.closest('[data-setup]');
+    if (setupBtn) {
+      const id = setupBtn.getAttribute('data-setup');
+      const ente = s.enti.find(x => x.id === id);
+      if (!ente) return;
+      if (!window.confirm('Eseguire setup su «' + ente.nome + '» (/' + ente.subdomain + '/)? Serve HOOK_SECRET uguale su piattaforma e org.')) return;
+      setupBtn.disabled = true;
+      const label = setupBtn.textContent;
+      setupBtn.textContent = 'In corso…';
+      try {
+        const r = await platformApi('ente_setup', { token: s.token, id });
+        alert(r.messaggio || 'Setup completato.');
+      } catch (ex) {
+        alert(ex.message || 'Setup non riuscito.');
+      } finally {
+        setupBtn.disabled = false;
+        setupBtn.textContent = label;
+      }
       return;
     }
     const tog = ev.target.closest('[data-toggle]');
