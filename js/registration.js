@@ -133,7 +133,7 @@
       box.hidden = false;
       box.innerHTML = lista.map(e => {
         const titolo = esc(e.titolo) + (e.meta ? ' <span class="meta-card">' + esc(e.meta) + '</span>' : '');
-        const fatti = [e.quando, e.scadenza].filter(Boolean).map(esc).join(' · ');
+        const fatti = [testoQuandoPubblico(e.quando), e.scadenza].filter(Boolean).map(esc).join(' · ');
         return '<a class="card-edizione" href="' + esc(urlEdizione(e.slug)) + '">' +
           '<h2>' + titolo + '</h2>' +
           (fatti ? '<p class="card-fatti">' + fatti + '</p>' : '') +
@@ -333,10 +333,26 @@
     if (passo >= PASSI) passo = PASSI - 1;
   }
 
+  /** «novembre 2026»; se Sheets ha coercitato in ISO, ripristina mese/anno (fuso locale). */
+  function testoQuandoPubblico(valore) {
+    const s = String(valore == null ? '' : valore).trim();
+    if (!s) return '';
+    if (!/^\d{4}-\d{2}-\d{2}/.test(s)) return s;
+    const d = new Date(s);
+    if (Number.isNaN(d.getTime())) return s;
+    const t = d.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+    return t ? t.charAt(0).toLowerCase() + t.slice(1) : s;
+  }
+
   function applicaEvento(ev) {
     evento = ev;
     cfg.evento = ev;
-    document.querySelectorAll('[data-evento]').forEach(el => { el.textContent = ev[el.dataset.evento] || ''; });
+    document.querySelectorAll('[data-evento]').forEach(el => {
+      const chiave = el.dataset.evento;
+      let v = ev[chiave] || '';
+      if (chiave === 'quando') v = testoQuandoPubblico(v);
+      el.textContent = v;
+    });
     document.title = ev.titolo + (ev.meta ? ' · ' + ev.meta : '') + ' · Vieni e seguimi';
     configuraPassiDocumenti(ev.documenti || []);
     const campoParr = $('#campo-parrocchiano');

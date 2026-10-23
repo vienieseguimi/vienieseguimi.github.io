@@ -31,11 +31,11 @@ body {
   padding: 0 16px;
 }
 
-/* ---- Testata compatta e ordinata */
+/* ---- Testata: brand + titolo + fatti in un’unica composizione */
 .testata {
   background: var(--inchiostro);
   color: #fff;
-  padding: .55rem 0 .6rem;
+  padding: .65rem 0 .85rem;
   border-bottom: 3px solid var(--segnavia);
 }
 .testata .brand-mark {
@@ -43,8 +43,20 @@ body {
   height: 2rem;
   border-radius: 8px;
 }
-.testata .brand-nome { font-size: .95rem; }
-.testata .brand-sotto { font-size: .72rem; margin-top: .05rem; }
+.testata .brand-testi { min-width: 0; }
+.testata .brand-nome {
+  font-size: .95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.testata .brand-sotto {
+  font-size: .72rem;
+  margin-top: .05rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* Pulsante indietro: solo freccia, stesso aspetto su home e modulo */
 .testata-indietro {
@@ -76,14 +88,14 @@ body {
   display: flex;
   align-items: center;
   gap: .55rem;
-  margin-bottom: .35rem;
+  margin-bottom: .55rem;
   min-width: 0;
 }
 .testata-brand-riga .brand { margin-bottom: 0; min-width: 0; }
 
 .testata-griglia {
   display: grid;
-  gap: .4rem .65rem;
+  gap: .45rem;
   align-items: start;
 }
 .testata-titoli { min-width: 0; }
@@ -91,29 +103,32 @@ body {
 .testata h1 {
   margin: 0;
   font-size: 1rem;
-  letter-spacing: -.01em;
+  letter-spacing: -.015em;
   line-height: 1.2;
   font-weight: 700;
 }
+/* Destinazione / meta: sopracciglio; titolo evento: segnale principale */
 .testata h1 .meta {
   display: block;
-  font-size: clamp(1.2rem, 3.5vw, 1.5rem);
-  font-weight: 700;
-  color: #fff;
+  margin: 0 0 .2rem;
+  font-size: .82rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: #c8d0dc;
+  overflow-wrap: anywhere;
 }
 .testata h1 .meta:empty { display: none; }
 .testata h1 .titolo-evento {
   display: block;
-  margin-top: .2rem;
-  font-size: .9rem;
-  font-weight: 400;
-  color: #c8d0dc;
-}
-.testata h1 .meta:empty + .titolo-evento {
-  margin-top: 0;
-  font-size: clamp(1.2rem, 3.5vw, 1.5rem);
+  margin: 0;
+  font-size: clamp(1.15rem, 4.5vw, 1.45rem);
   font-weight: 700;
   color: #fff;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.testata h1 .meta:empty + .titolo-evento {
+  font-size: clamp(1.15rem, 4.5vw, 1.45rem);
 }
 
 .parrocchia {
@@ -134,17 +149,19 @@ body {
   clip-path: polygon(0 32%, 62% 32%, 62% 0, 100% 50%, 62% 100%, 62% 68%, 0 68%);
 }
 
+/* Mobile: fatti in colonna (legibili su telefono, anche per utenti anziani) */
 .fatti {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: .2rem;
+  flex-wrap: nowrap;
+  gap: .28rem;
 }
 .fatti > div {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: .2rem .35rem;
+  gap: .15rem .35rem;
   padding: 0;
   border: 0;
 }
@@ -153,17 +170,19 @@ body {
   margin: 0;
   font-size: .8rem;
   font-weight: 400;
-  color: #c8d0dc;
+  color: #aeb6c4;
   text-transform: none;
   letter-spacing: 0;
+  flex: 0 0 auto;
 }
 .fatti dt::after { content: ':'; }
 .fatti dd {
   margin: 0;
-  font-size: .8rem;
+  font-size: .92rem;
   font-weight: 700;
   color: #fff;
-  line-height: 1.3;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 /* ---- Home */
@@ -713,9 +732,9 @@ fieldset.campo > legend, fieldset.scelta > legend {
 .piede-portale .brand-sotto { display: none; }
 .piede-meta {
   grid-column: 1 / -1;
-  margin-top: .1rem;
-  padding-top: .45rem;
-  border-top: 1px solid var(--bordo);
+  margin-top: .15rem;
+  padding-top: 0;
+  border-top: 0;
 }
 
 /* =========================================================
@@ -725,23 +744,29 @@ fieldset.campo > legend, fieldset.scelta > legend {
   .colonna { max-width: 46rem; padding: 0 22px; }
   main#contenuto { padding-top: 2rem; }
 
+  .testata { padding: .75rem 0 1rem; }
   .testata-griglia {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: "titoli fatti";
-    column-gap: 2rem;
-    row-gap: .35rem;
-    align-items: end;
+    grid-template-columns: 1fr;
+    grid-template-areas: "titoli" "fatti";
+    row-gap: .55rem;
+    align-items: start;
+    max-width: 42rem;
   }
   .testata-titoli { grid-area: titoli; }
+  /* Tablet+: fatti in riga sotto il titolo */
   .fatti {
     grid-area: fatti;
-    gap: .25rem;
-    padding-left: 1rem;
-    border-left: 2px solid var(--segnavia);
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: .4rem 1.35rem;
+    padding: 0;
+    border: 0;
   }
-  .testata h1 .meta { font-size: 1.4rem; }
-  .testata h1 .meta:empty + .titolo-evento { font-size: 1.4rem; }
-  .fatti dt, .fatti dd { font-size: .85rem; }
+  .testata h1 .meta { font-size: .88rem; }
+  .testata h1 .titolo-evento,
+  .testata h1 .meta:empty + .titolo-evento { font-size: 1.55rem; }
+  .fatti dt { font-size: .8rem; }
+  .fatti dd { font-size: .92rem; }
 
   .intro { max-width: 36em; }
 
@@ -801,9 +826,11 @@ fieldset.campo > legend, fieldset.scelta > legend {
 @media (min-width: 960px) {
   .colonna { max-width: 70rem; padding: 0 32px; }
 
-  .testata-griglia { column-gap: 2.5rem; }
-  .testata h1 .meta { font-size: 1.5rem; }
-  .testata h1 .meta:empty + .titolo-evento { font-size: 1.5rem; }
+  .testata { padding: .85rem 0 1.15rem; }
+  .testata-griglia { max-width: 48rem; }
+  .testata h1 .meta { font-size: .9rem; }
+  .testata h1 .titolo-evento,
+  .testata h1 .meta:empty + .titolo-evento { font-size: 1.75rem; }
 
   main#contenuto {
     padding-top: 2.25rem;
@@ -919,7 +946,21 @@ fieldset.campo > legend, fieldset.scelta > legend {
 /* Telefono stretto e safe-area */
 @media (max-width: 360px) {
   .colonna { padding-left: 12px; padding-right: 12px; }
-  .testata { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+  .testata {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-top: .55rem;
+    padding-bottom: .7rem;
+  }
+  .testata-brand-riga { margin-bottom: .4rem; gap: .4rem; }
+  .testata .brand-nome { font-size: .88rem; }
+  .testata .brand-sotto { font-size: .68rem; }
+  .testata h1 .meta { font-size: .78rem; }
+  .testata h1 .titolo-evento,
+  .testata h1 .meta:empty + .titolo-evento { font-size: 1.12rem; }
+  .fatti { gap: .22rem; }
+  .fatti dt { font-size: .78rem; }
+  .fatti dd { font-size: .88rem; }
   .stepper-label { font-size: .55rem; max-width: 3.6rem; }
   .stepper-num { width: 1.55rem; height: 1.55rem; font-size: .75rem; }
   .stepper-voce:not(:last-child)::after {
