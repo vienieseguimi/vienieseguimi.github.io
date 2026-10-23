@@ -39,16 +39,16 @@
     return primo;
   }
 
-  /** Se l’URL è /<ente>/secretariat, passa a secretariat.html?ente= */
+  /** Se l’URL è /<ente>/secretariat[.html], passa a secretariat.html?ente= */
   function redirigiSegreteriaSeServe() {
     const parti = pathParti();
-    if (parti.length >= 2 && (parti[1] === 'secretariat' || parti[1] === 'segreteria')) {
-      const ente = parti[0];
-      const dest = (basePath() || '') + '/secretariat.html?ente=' + encodeURIComponent(ente);
-      location.replace(dest + location.hash);
-      return true;
-    }
-    return false;
+    if (parti.length < 2) return false;
+    const secondo = String(parti[1] || '').replace(/\.html$/, '');
+    if (secondo !== 'secretariat' && secondo !== 'segreteria') return false;
+    const ente = parti[0];
+    const dest = (basePath() || '') + '/secretariat.html?ente=' + encodeURIComponent(ente);
+    location.replace(dest + location.hash);
+    return true;
   }
 
   async function platformApi(azione, payload, opzioni) {
