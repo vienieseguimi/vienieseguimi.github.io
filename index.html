@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Vieni e seguimi — iscrizioni ai pellegrinaggi</title>
 <meta name="description" content="Vieni e seguimi: iscrizioni ai pellegrinaggi della parrocchia.">
 <meta property="og:title" content="Vieni e seguimi — iscrizioni ai pellegrinaggi">
@@ -100,8 +102,8 @@
         <p><a href="secretariat.html" id="link-secretariat">Accesso al pannello segreteria</a></p>
       </div>
       <div class="piede-blocco" id="piede-piattaforma" hidden>
-        <p class="piede-etichetta">Piattaforma</p>
-        <p><a href="platform.html">Console operatori</a></p>
+        <p class="piede-etichetta">Comunità</p>
+        <p><a href="/">Tutte le comunità</a></p>
       </div>
       <p class="piede-copy">© 2026 <a href="https://github.com/davidemainardi" rel="noopener noreferrer" target="_blank">Davide Mainardi</a> · <a href="#privacy" data-apri-privacy>Dati e privacy</a></p>
     </div>
@@ -166,7 +168,7 @@
 
   <form id="modulo" novalidate hidden>
     <div class="modulo-guida">
-      <p class="intro">Compila in <strong class="accento">4 passi</strong>. Ricevi subito un’email; la segreteria ti riscrive quando l’iscrizione è confermata.</p>
+      <p class="intro">Compila in <strong class="accento" id="intro-passi-n">4</strong> <span id="intro-passi-label">passi</span>. Ricevi subito un’email; la segreteria ti riscrive quando l’iscrizione è confermata.</p>
 
       <nav class="stepper" aria-label="Passi dell’iscrizione">
         <ol class="stepper-lista" id="stepper">
@@ -188,9 +190,15 @@
               <span class="stepper-label">Camera</span>
             </button>
           </li>
-          <li class="stepper-voce" data-step="3">
+          <li class="stepper-voce" id="stepper-documenti" data-step="3" hidden>
             <button type="button" class="stepper-btn" data-vai="3" disabled>
               <span class="stepper-num">4</span>
+              <span class="stepper-label">Documenti</span>
+            </button>
+          </li>
+          <li class="stepper-voce" id="stepper-invio" data-step="3">
+            <button type="button" class="stepper-btn" id="stepper-btn-invio" data-vai="3" disabled>
+              <span class="stepper-num" id="stepper-num-invio">4</span>
               <span class="stepper-label">Invio</span>
             </button>
           </li>
@@ -328,7 +336,20 @@
         </div>
       </fieldset>
 
-      <div class="gruppo passo-pannello" data-passo="3" hidden>
+      <div class="gruppo passo-pannello" id="passo-documenti" data-passo="3" hidden>
+        <h2 class="titolo-passo">Documenti da scaricare</h2>
+        <p class="aiuto-passo">Scarica i file preparati dalla segreteria, poi conferma di averli presi in visione.</p>
+        <ul id="lista-documenti" class="lista-documenti"></ul>
+        <div class="campo consenso" data-campo="documenti_confermati">
+          <p class="messaggio-errore" id="documenti_confermati-errore"></p>
+          <label class="opzione">
+            <input type="checkbox" id="documenti_confermati" name="documenti_confermati" aria-describedby="documenti_confermati-errore">
+            <span>Ho scaricato / preso visione dei documenti indicati sopra.</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="gruppo passo-pannello" id="passo-invio" data-passo="3" hidden>
         <h2 class="titolo-passo">Conferma e invia</h2>
         <p class="aiuto-passo">Controlla il consenso e invia l’iscrizione. Potrai iscrivere un’altra persona subito dopo.</p>
 

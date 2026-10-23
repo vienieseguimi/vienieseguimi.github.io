@@ -86,6 +86,14 @@
    * Risolve l’ente corrente. Restituisce:
    *   { mode: 'ente', ente } | { mode: 'apex' } | { mode: 'errore', ... }
    */
+  /** Difesa in profondità: accetta solo una web app Apps Script, o /api quando si lavora in locale. */
+  function apiUrlAffidabile(u) {
+    u = String(u || '');
+    if (/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(u)) return true;
+    const locale = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+    return locale && (u === '/api' || /^https?:\/\/localhost(?::\d+)?\/api$/.test(u));
+  }
+
   async function risolviTenant() {
     if (redirigiSegreteriaSeServe()) {
       return { mode: 'redirect' };
@@ -100,6 +108,9 @@
     try {
       const r = await platformApi('risolvi', { subdomain: id });
       cfg.ente = r.ente;
+      if (!apiUrlAffidabile(r.ente && r.ente.apiUrl)) {
+        throw Object.assign(new Error('Indirizzo del servizio non valido per questa comunità.'), { codice: 'api_non_valida' });
+      }
       cfg.apiUrl = r.ente.apiUrl;
       return { mode: 'ente', ente: r.ente, subdomain: id };
     } catch (err) {

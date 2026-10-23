@@ -5,6 +5,12 @@
  * Il polling si ferma quando la scheda non è visibile e riparte subito quando torna in primo piano.
  */
 (async function () {
+  // Anti-clickjacking: GitHub Pages non permette l’header X-Frame-Options, quindi il pannello rifiuta di stare in un iframe.
+  if (window.top !== window.self) {
+    document.documentElement.style.display = 'none';
+    try { window.top.location = window.self.location.href; } catch (e) { /* frame di un altro sito: resta nascosto */ }
+    return;
+  }
   const { api, memoria, urlEdizione } = window.Pell;
   const { risolviTenant } = window.PellTenant;
   const cfg = window.PELLEGRINAGGIO;
@@ -32,6 +38,17 @@
   const SIST = { singola: 'singola', doppia: 'doppia', tripla: 'tripla', indifferente: 'camera indifferente' };
   const STATO_ED = { bozza: 'Bozza', aperta: 'Aperta', chiusa: 'Chiusa', archivio: 'Archivio' };
 
+  const FRASI_LOG = {
+    iscrizione_ricevuta: '{nome} {cognome} si è iscritta — {codice}',
+    iscrizione_aggiornata: '{operatore} ha aggiornato {nome} {cognome} ({codice}) → {stato}',
+    iscrizioni_aperte: '{operatore} ha aperto le iscrizioni{slug_suffisso}',
+    iscrizioni_chiuse: '{operatore} ha chiuso le iscrizioni{slug_suffisso}',
+    documento_caricato: '{operatore} ha caricato «{documento}»{slug_suffisso}',
+    documento_eliminato: '{operatore} ha eliminato «{documento}»{slug_suffisso}',
+    edizione_salvata: '{operatore} ha salvato il pellegrinaggio «{titolo}»{slug_suffisso}',
+    login_ok: '{operatore} ha aperto la segreteria',
+  };
+
   const s = {
     token: null, nome: '',
     slug: '', edizioni: [], evento: null,
@@ -39,6 +56,7 @@
     filtro: 'in_attesa', cerca: '', parr: '',
     selezionato: null, occupate: new Set(), evidenzia: new Map(),
     nonViste: 0, errori: 0, timer: null, inCorso: false, ultimoOk: null,
+    attivita: [], attivitaTimer: null, attivitaInCorso: false,
   };
 
   const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -139,12 +157,81 @@
       $('#pannello-edizioni').hidden = false;
       renderListaEdizioni();
     }
+    caricaAttivita();
+    programmaAttivita();
   }
 
   $('#sel-edizione').addEventListener('change', e => selezionaEdizione(e.target.value));
 
   // ================= Aggiornamento live =================
-  function fermaAggiornamenti() { clearTimeout(s.timer); s.timer = null; }
+  function fermaAggiornamenti() {
+    clearTimeout(s.timer); s.timer = null;
+    clearTimeout(s.attivitaTimer); s.attivitaTimer = null;
+  }
+
+  function programmaAttivita() {
+    clearTimeout(s.attivitaTimer); s.attivitaTimer = null;
+    if (!s.token || document.hidden) return;
+    s.attivitaTimer = setTimeout(function () {
+      caricaAttivita().finally(programmaAttivita);
+    }, Math.max(30000, (cfg.intervalloAggiornamento || 5000) * 6));
+  }
+
+  function fraseLog(ev) {
+    const d = (ev && ev.dettagli && typeof ev.dettagli === 'object') ? ev.dettagli : {};
+    const vals = {
+      nome: ev.nome || '',
+      cognome: ev.cognome || '',
+      codice: ev.codice || '',
+      email: ev.email || '',
+      operatore: ev.operatore || 'Qualcuno',
+      slug: ev.slug || '',
+      slug_suffisso: ev.slug ? ' (' + ev.slug + ')' : '',
+      stato: STATO[d.stato || ''] || d.stato || '',
+      documento: d.documento || '',
+      titolo: d.titolo || ev.slug || 'pellegrinaggio',
+    };
+    const tpl = FRASI_LOG[ev.tipo] || ('Attività: ' + (ev.tipo || 'sconosciuta'));
+    return tpl.replace(/\{(\w+)\}/g, function (_, k) { return vals[k] != null ? String(vals[k]) : ''; })
+      .replace(/\s+/g, ' ').trim();
+  }
+
+  function quandoLog(iso) {
+    if (!iso) return '';
+    const t = Date.parse(iso);
+    if (!t) return String(iso).slice(0, 16);
+    return new Date(t).toLocaleString('it-IT', {
+      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+    });
+  }
+
+  function renderAttivita() {
+    const lista = $('#attivita-lista');
+    const vuoto = $('#attivita-vuoto');
+    if (!lista) return;
+    lista.innerHTML = s.attivita.map(function (ev) {
+      return '<li><time class="attivita-quando" datetime="' + esc(ev.creato_il || '') + '">' +
+        esc(quandoLog(ev.creato_il)) + '</time><p class="attivita-frase">' + esc(fraseLog(ev)) + '</p></li>';
+    }).join('');
+    if (vuoto) vuoto.hidden = s.attivita.length > 0;
+  }
+
+  async function caricaAttivita() {
+    if (!s.token || s.attivitaInCorso) return;
+    s.attivitaInCorso = true;
+    try {
+      const r = await api('log_elenco', { token: s.token, limite: 40 });
+      s.attivita = r.eventi || [];
+      renderAttivita();
+    } catch (err) {
+      /* silenzioso: il pannello principale resta usabile */
+    } finally {
+      s.attivitaInCorso = false;
+    }
+  }
+
+  const btnAttivita = $('#attivita-aggiorna');
+  if (btnAttivita) btnAttivita.addEventListener('click', function () { caricaAttivita(); });
 
   function programma() {
     fermaAggiornamenti();
@@ -211,6 +298,8 @@
     if (document.hidden) return fermaAggiornamenti();
     s.nonViste = 0; aggiornaTitolo();
     aggiorna();
+    caricaAttivita();
+    programmaAttivita();
   });
 
   function annunciaNuove(nuove) {
@@ -522,7 +611,12 @@
       ['sistemazione', 'Camera'], ['compagno_camera', 'In camera con'], ['tutore', 'Tutore'], ['esigenze', 'Esigenze'],
       ['note', 'Note persona'], ['note_segreteria', 'Note segreteria'], ['creato_il', 'Iscritta il'], ['gestito_da', 'Gestita da'],
     ];
-    const cella = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    // Neutralizza le formule (CSV/formula injection): Excel esegue celle che iniziano con = + - @ tab o CR.
+    const cella = v => {
+      let s = String(v == null ? '' : v);
+      if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+      return '"' + s.replace(/"/g, '""') + '"';
+    };
     const righe = filtrate().map(r => col.map(([k]) => cella(k === 'stato' ? STATO[r.stato] : k === 'creato_il' ? new Date(r.creato_il).toLocaleString('it-IT') : r[k])).join(';'));
     const csv = '﻿' + [col.map(c => cella(c[1])).join(';')].concat(righe).join('\r\n');
     const a = document.createElement('a');
@@ -553,6 +647,23 @@
     ).join('') || '<li class="aiuto">Nessun pellegrinaggio.</li>';
   }
 
+  function renderDocumentiEdizione(docs) {
+    const box = $('#ed-documenti-box');
+    const lista = $('#ed-documenti-lista');
+    const msg = $('#ed-documenti-msg');
+    if (!box || !lista) return;
+    const id = $('#ed-id').value;
+    box.hidden = !id;
+    if (msg) msg.hidden = true;
+    const docsSafe = Array.isArray(docs) ? docs : [];
+    lista.innerHTML = docsSafe.map(d =>
+      '<li class="ed-doc">' +
+      '<a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.nome) + '</a>' +
+      '<button type="button" class="link ed-doc-elimina" data-id="' + esc(d.id) + '">Elimina</button>' +
+      '</li>'
+    ).join('') || '<li class="aiuto">Nessun documento caricato.</li>';
+  }
+
   function apriFormEdizione(ed) {
     $('#ed-form').hidden = false;
     $('#ed-errore').hidden = true;
@@ -571,6 +682,7 @@
     $('#ed-posti').value = ed ? (ed.posti || 0) : 50;
     $('#ed-prefisso').value = ed ? (ed.prefisso_codice || 'PG-') : 'PG-';
     $('#ed-stato').value = ed ? ed.stato : 'bozza';
+    renderDocumentiEdizione(ed ? (ed.documenti || []) : []);
   }
 
   $('#gestisci-edizioni').addEventListener('click', () => {
@@ -616,16 +728,95 @@
       const r = await api('edizione_salva', { token: s.token, id: id || undefined, dati });
       const ed = r.edizione;
       const i = s.edizioni.findIndex(x => x.id === ed.id);
-      if (i >= 0) s.edizioni[i] = ed; else s.edizioni.push(ed);
+      if (i >= 0) s.edizioni[i] = Object.assign({}, s.edizioni[i], ed);
+      else s.edizioni.push(ed);
       popolaSelettore();
       renderListaEdizioni();
-      $('#ed-form').hidden = true;
-      avviso('Pellegrinaggio salvato: ' + ed.slug);
+      if (!id) {
+        // Nuova edizione: resta sul form per caricare i documenti
+        $('#ed-id').value = ed.id;
+        $('#ed-slug').disabled = true;
+        $('#ed-form-titolo').textContent = 'Modifica pellegrinaggio';
+        renderDocumentiEdizione(ed.documenti || []);
+        avviso('Pellegrinaggio creato. Ora puoi caricare i documenti.');
+      } else {
+        $('#ed-form').hidden = true;
+        avviso('Pellegrinaggio salvato: ' + ed.slug);
+      }
       if (!s.slug || s.slug === ed.slug) await selezionaEdizione(ed.slug);
     } catch (ex) {
       err.textContent = ex.message;
       err.hidden = false;
     } finally { btn.disabled = false; }
+  });
+
+  async function fileABase64(file) {
+    const buf = await file.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let bin = '';
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+    }
+    return btoa(bin);
+  }
+
+  function mimeDaFile(file) {
+    const t = String(file.type || '').toLowerCase();
+    if (t) return t;
+    const n = String(file.name || '').toLowerCase();
+    if (n.endsWith('.pdf')) return 'application/pdf';
+    if (n.endsWith('.png')) return 'image/png';
+    if (n.endsWith('.jpg') || n.endsWith('.jpeg')) return 'image/jpeg';
+    return '';
+  }
+
+  const inputDoc = $('#ed-documento-file');
+  if (inputDoc) inputDoc.addEventListener('change', async ev => {
+    const input = ev.target;
+    const file = input.files && input.files[0];
+    input.value = '';
+    const id = $('#ed-id').value;
+    const msg = $('#ed-documenti-msg');
+    if (!file || !id) return;
+    if (msg) { msg.hidden = false; msg.textContent = 'Caricamento di «' + file.name + '»…'; }
+    try {
+      const contenutoBase64 = await fileABase64(file);
+      const r = await api('documento_carica', {
+        token: s.token,
+        id,
+        nome: file.name,
+        mime: mimeDaFile(file),
+        contenutoBase64,
+      });
+      const i = s.edizioni.findIndex(x => x.id === id);
+      if (i >= 0) s.edizioni[i].documenti = r.documenti || [];
+      renderDocumentiEdizione(r.documenti || []);
+      if (msg) { msg.textContent = 'File caricato.'; }
+      avviso('Documento caricato: ' + file.name);
+    } catch (ex) {
+      if (msg) { msg.hidden = false; msg.textContent = ex.message; }
+      else avviso(ex.message);
+    }
+  });
+
+  const listaDoc = $('#ed-documenti-lista');
+  if (listaDoc) listaDoc.addEventListener('click', async e => {
+    const btn = e.target.closest('.ed-doc-elimina');
+    if (!btn) return;
+    const id = $('#ed-id').value;
+    const documentoId = btn.dataset.id;
+    if (!id || !documentoId) return;
+    if (!confirm('Eliminare questo documento?')) return;
+    try {
+      const r = await api('documento_elimina', { token: s.token, id, documentoId });
+      const i = s.edizioni.findIndex(x => x.id === id);
+      if (i >= 0) s.edizioni[i].documenti = r.documenti || [];
+      renderDocumentiEdizione(r.documenti || []);
+      avviso('Documento eliminato.');
+    } catch (ex) {
+      avviso(ex.message);
+    }
   });
 
   // ================= Avvio =================

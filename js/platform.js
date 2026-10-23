@@ -2,6 +2,12 @@
  * Console operatori: login piattaforma + CRUD enti.
  */
 (function () {
+  // Anti-clickjacking: GitHub Pages non permette l’header X-Frame-Options, quindi il pannello rifiuta di stare in un iframe.
+  if (window.top !== window.self) {
+    document.documentElement.style.display = 'none';
+    try { window.top.location = window.self.location.href; } catch (e) { /* frame di un altro sito: resta nascosto */ }
+    return;
+  }
   const { memoria } = window.Pell;
   const { platformApi, urlEnte } = window.PellTenant;
   const cfg = window.PELLEGRINAGGIO;

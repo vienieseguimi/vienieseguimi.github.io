@@ -491,6 +491,16 @@ fieldset.campo > legend, fieldset.scelta > legend {
 
 .consenso .opzione { align-items: flex-start; font-weight: 400; }
 .consenso .opzione input { margin-top: .15rem; }
+
+.lista-documenti {
+  list-style: none;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+.lista-documenti .btn { width: 100%; text-align: center; }
 .informativa { margin-top: .55rem; }
 .informativa summary {
   cursor: pointer; text-decoration: underline; text-underline-offset: 3px;

@@ -32,8 +32,7 @@
     if (meta) meta.textContent = 'Scegli la tua parrocchia o comunità pastorale.';
     const piedeSeg = $('#piede-segreteria');
     if (piedeSeg) piedeSeg.hidden = true;
-    const piedePlat = $('#piede-piattaforma');
-    if (piedePlat) piedePlat.hidden = false;
+    // Console operatori: non pubblicizzata in home (URL noto solo agli operatori).
     try {
       const r = await platformApi('enti_attivi', {}, { timeoutMs: 15000 });
       $('#home-caricamento').hidden = true;
@@ -158,28 +157,95 @@
   const modulo = $('#modulo');
   const BOZZA = 'pellegrinaggio.bozza.' + slug;
   const CONTATTI = ['email', 'telefono', 'indirizzo', 'comune', 'parrocchiano_dichiarato'];
-  const PASSI = 4;
-  const CAMPI_PASSO = [
+  let PASSI = 4;
+  let CAMPI_PASSO = [
     ['nome', 'cognome', 'data_nascita', 'tutore'],
     ['email', 'telefono', 'indirizzo', 'comune', 'parrocchiano_dichiarato'],
     ['sistemazione', 'compagno_camera', 'esigenze', 'note'],
     ['consenso_privacy'],
   ];
-  const FOCUS_PASSO = ['#nome', '#email', 'input[name=sistemazione]', '#consenso_privacy'];
+  let FOCUS_PASSO = ['#nome', '#email', 'input[name=sistemazione]', '#consenso_privacy'];
+  let PASSO_CAMPO = {};
+  let haDocumenti = false;
   let passo = 0;
   let evento = null;
+
+  function ricostruisciMappaPassi() {
+    PASSO_CAMPO = {};
+    CAMPI_PASSO.forEach((campi, i) => campi.forEach(c => { PASSO_CAMPO[c] = i; }));
+  }
+  ricostruisciMappaPassi();
+
+  function configuraPassiDocumenti(docs) {
+    haDocumenti = Array.isArray(docs) && docs.length > 0;
+    const stepDocs = $('#stepper-documenti');
+    const passoDocs = $('#passo-documenti');
+    const passoInvio = $('#passo-invio');
+    const stepInvio = $('#stepper-invio');
+    const btnInvio = $('#stepper-btn-invio');
+    const numInvio = $('#stepper-num-invio');
+    const introN = $('#intro-passi-n');
+    const lista = $('#lista-documenti');
+
+    if (haDocumenti) {
+      PASSI = 5;
+      CAMPI_PASSO = [
+        ['nome', 'cognome', 'data_nascita', 'tutore'],
+        ['email', 'telefono', 'indirizzo', 'comune', 'parrocchiano_dichiarato'],
+        ['sistemazione', 'compagno_camera', 'esigenze', 'note'],
+        ['documenti_confermati'],
+        ['consenso_privacy'],
+      ];
+      FOCUS_PASSO = ['#nome', '#email', 'input[name=sistemazione]', '#documenti_confermati', '#consenso_privacy'];
+      if (stepDocs) { stepDocs.hidden = false; stepDocs.dataset.step = '3'; }
+      if (passoDocs) passoDocs.dataset.passo = '3';
+      if (passoInvio) passoInvio.dataset.passo = '4';
+      if (stepInvio) stepInvio.dataset.step = '4';
+      if (btnInvio) btnInvio.dataset.vai = '4';
+      if (numInvio) numInvio.textContent = '5';
+      if (introN) introN.textContent = '5';
+      if (lista) {
+        lista.innerHTML = docs.map(d =>
+          '<li><a class="btn btn-secondario" href="' + esc(d.url) + '" target="_blank" rel="noopener noreferrer">' +
+          'Scarica: ' + esc(d.nome) + '</a></li>'
+        ).join('');
+      }
+    } else {
+      PASSI = 4;
+      CAMPI_PASSO = [
+        ['nome', 'cognome', 'data_nascita', 'tutore'],
+        ['email', 'telefono', 'indirizzo', 'comune', 'parrocchiano_dichiarato'],
+        ['sistemazione', 'compagno_camera', 'esigenze', 'note'],
+        ['consenso_privacy'],
+      ];
+      FOCUS_PASSO = ['#nome', '#email', 'input[name=sistemazione]', '#consenso_privacy'];
+      if (stepDocs) stepDocs.hidden = true;
+      if (passoDocs) passoDocs.hidden = true;
+      if (passoInvio) passoInvio.dataset.passo = '3';
+      if (stepInvio) stepInvio.dataset.step = '3';
+      if (btnInvio) btnInvio.dataset.vai = '3';
+      if (numInvio) numInvio.textContent = '4';
+      if (introN) introN.textContent = '4';
+      if (lista) lista.innerHTML = '';
+      const chk = $('#documenti_confermati');
+      if (chk) chk.checked = false;
+    }
+    ricostruisciMappaPassi();
+    if (passo >= PASSI) passo = PASSI - 1;
+  }
 
   function applicaEvento(ev) {
     evento = ev;
     cfg.evento = ev;
     document.querySelectorAll('[data-evento]').forEach(el => { el.textContent = ev[el.dataset.evento] || ''; });
     document.title = ev.titolo + (ev.meta ? ' · ' + ev.meta : '') + ' · Vieni e seguimi';
+    configuraPassiDocumenti(ev.documenti || []);
   }
 
   api('stato', { slug }, { timeoutMs: 15000 }).then(r => {
     applicaEvento(r.evento);
     if (!r.aperte) { modulo.hidden = true; $('#chiuse').hidden = false; }
-    else { modulo.hidden = false; }
+    else { modulo.hidden = false; aggiornaStepper(); }
   }).catch(err => {
     if (err.codice === 'edizione_non_trovata' || err.codice === 'dati_non_validi') {
       $('#edizione-mancante').hidden = false;
@@ -263,6 +329,7 @@
     v.parrocchiano_dichiarato = f.get('parrocchiano_dichiarato') || '';
     v.sistemazione = f.get('sistemazione') || '';
     v.consenso_privacy = $('#consenso_privacy').checked;
+    v.documenti_confermati = haDocumenti && $('#documenti_confermati') && $('#documenti_confermati').checked;
     // Preferisci ISO dal date nativo; altrimenti interpreta gg/mm/aaaa digitato
     if (nativoData.value && /^\d{4}-\d{2}-\d{2}$/.test(nativoData.value)) {
       v.data_nascita = nativoData.value;
@@ -308,7 +375,7 @@
 
   function salvaBozza() {
     const v = valori();
-    delete v.consenso_privacy; delete v.sito_web;
+    delete v.consenso_privacy; delete v.documenti_confermati; delete v.sito_web;
     if (v.data_nascita === 'non-valida') v.data_nascita = nativoData.value || '';
     v.passo = passo;
     memoria.scrivi(BOZZA, v);
@@ -322,15 +389,14 @@
   const ETICHETTE = {
     nome: 'Nome', cognome: 'Cognome', data_nascita: 'Data di nascita', tutore: 'Genitore o tutore',
     email: 'Email', telefono: 'Telefono', indirizzo: 'Indirizzo', comune: 'Comune',
-    parrocchiano_dichiarato: 'Parrocchia', sistemazione: 'Camera', consenso_privacy: 'Consenso',
+    parrocchiano_dichiarato: 'Parrocchia', sistemazione: 'Camera',
+    documenti_confermati: 'Documenti', consenso_privacy: 'Consenso',
   };
   const PRIMO_INPUT = {
     data_nascita: '#data_nascita_vista',
     parrocchiano_dichiarato: 'input[name=parrocchiano_dichiarato]',
     sistemazione: 'input[name=sistemazione]',
   };
-  const PASSO_CAMPO = {};
-  CAMPI_PASSO.forEach((campi, i) => campi.forEach(c => { PASSO_CAMPO[c] = i; }));
 
   function valida(v) {
     const e = {};
@@ -347,6 +413,7 @@
     if (!v.comune) e.comune = 'Scrivi il comune';
     if (!v.parrocchiano_dichiarato) e.parrocchiano_dichiarato = 'Scegli una risposta';
     if (!v.sistemazione) e.sistemazione = 'Scegli il tipo di camera';
+    if (haDocumenti && !v.documenti_confermati) e.documenti_confermati = 'Scarica i documenti e conferma di averli presi in visione';
     if (!v.consenso_privacy) e.consenso_privacy = 'Serve il consenso per registrare l\'iscrizione';
     return e;
   }
@@ -396,16 +463,21 @@
   const erroreInvio = $('#errore-invio');
 
   function aggiornaStepper() {
-    $$('.stepper-voce').forEach((li, i) => {
+    $$('.stepper-voce').forEach(li => {
+      if (li.hidden) return;
+      const idx = +li.dataset.step;
       const btn = li.querySelector('.stepper-btn');
-      const corrente = i === passo;
-      const fatto = i < passo;
+      const corrente = idx === passo;
+      const fatto = idx < passo;
       li.classList.toggle('fatto', fatto);
       if (corrente) li.setAttribute('aria-current', 'step');
       else li.removeAttribute('aria-current');
-      btn.disabled = !(fatto || corrente);
+      if (btn) btn.disabled = !(fatto || corrente);
     });
-    $$('.passo-pannello').forEach(p => { p.hidden = +p.dataset.passo !== passo; });
+    $$('.passo-pannello').forEach(p => {
+      if (p.id === 'passo-documenti' && !haDocumenti) { p.hidden = true; return; }
+      p.hidden = +p.dataset.passo !== passo;
+    });
     btnIndietro.hidden = passo === 0;
     btnAvanti.hidden = passo === PASSI - 1;
     bottone.hidden = passo !== PASSI - 1;
