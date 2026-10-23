@@ -49,6 +49,9 @@
       box.classList.add('lista-enti');
       box.innerHTML = lista.map(e =>
         '<a class="card-edizione card-ente" href="' + esc(urlEnte(e.subdomain, '/')) + '">' +
+        (e.logoUrl
+          ? '<img class="card-ente-logo" src="' + esc(e.logoUrl) + '" alt="" width="48" height="48" loading="lazy">'
+          : '') +
         '<h2>' + esc(e.nome) + '</h2>' +
         '<p class="card-fatti">Iscrizioni ai pellegrinaggi</p>' +
         '<span class="card-cta">Entra</span></a>'
@@ -146,12 +149,108 @@
   // ---- Modulo edizione
   $('#vista-modulo').hidden = false;
   const home = urlHome();
-  ['#link-altre', '#link-home-mancante', '#link-home-piede', '#link-home-testata', '#link-brand-modulo'].forEach(s => {
+  ['#link-altre', '#link-home-mancante', '#link-home-piede', '#link-home-testata', '#link-brand-modulo', '#pagina-iscrizione-torna'].forEach(s => {
     const a = $(s); if (a) a.href = home;
   });
   if (cfg.ente && cfg.ente.nome) {
     const bn = document.querySelector('#vista-modulo .brand-nome');
     if (bn) bn.textContent = cfg.ente.nome;
+  }
+
+  const uuidIscrizione = String(new URLSearchParams(location.search).get('uuid') || '').trim();
+
+  const ETICHETTE_STATO_UI = {
+    in_attesa: 'In attesa di conferma',
+    lista_attesa: 'In lista d’attesa',
+    confermata: 'Confermata',
+    rifiutata: 'Non confermata',
+    annullata: 'Annullata',
+  };
+
+  async function mostraPaginaIscrizione(uuid) {
+    const pag = $('#pagina-iscrizione');
+    const form = $('#modulo');
+    const ric = $('#ricevuta');
+    if (form) form.hidden = true;
+    if (ric) ric.hidden = true;
+    ['#chiuse', '#non-ancora', '#edizione-mancante', '#stepper'].forEach(s => {
+      const el = $(s); if (el) el.hidden = true;
+    });
+    if (!pag) return;
+    pag.hidden = false;
+    $('#pagina-iscrizione-caricamento').hidden = false;
+    $('#pagina-iscrizione-errore').hidden = true;
+    $('#pagina-iscrizione-corpo').hidden = true;
+
+    try {
+      const r = await api('iscrizione', { slug, uuid }, { timeoutMs: 20000 });
+      const isc = r.iscrizione || {};
+      const ev = r.evento || {};
+      $('#pagina-iscrizione-caricamento').hidden = true;
+      $('#pagina-iscrizione-corpo').hidden = false;
+      $('#pagina-iscrizione-titolo').textContent = ev.titolo || 'Pellegrinaggio';
+      const metaParti = [ev.meta, ev.quando].filter(Boolean);
+      $('#pagina-iscrizione-meta').textContent = metaParti.join(' · ');
+      $('#pagina-iscrizione-nome').textContent = ((isc.nome || '') + ' ' + (isc.cognome || '')).trim();
+      $('#pagina-iscrizione-codice').textContent = isc.codice || '';
+      const statoEl = $('#pagina-iscrizione-stato');
+      const stato = String(isc.stato || '');
+      statoEl.textContent = isc.statoEtichetta || ETICHETTE_STATO_UI[stato] || stato;
+      statoEl.className = 'pillola s-' + stato;
+      const motivo = $('#pagina-iscrizione-motivo');
+      if (isc.motivo_rifiuto) {
+        motivo.hidden = false;
+        motivo.textContent = 'Motivo: ' + isc.motivo_rifiuto;
+      } else {
+        motivo.hidden = true;
+        motivo.textContent = '';
+      }
+      const contatto = $('#pagina-iscrizione-contatto');
+      contatto.textContent = ev.contatto
+        ? ('Per domande contatta ' + ev.contatto + '.')
+        : '';
+      const partBox = $('#pagina-iscrizione-partecipanti');
+      const partLista = $('#pagina-iscrizione-partecipanti-lista');
+      const partecipanti = r.partecipanti || [];
+      if (partBox && partLista && partecipanti.length > 1) {
+        partBox.hidden = false;
+        partLista.innerHTML = partecipanti.map(p =>
+          '<li><strong>' + esc(((p.nome || '') + ' ' + (p.cognome || '')).trim()) + '</strong>' +
+          (p.codice ? ' · ' + esc(p.codice) : '') +
+          (p.ruolo === 'compagno' ? ' <span class="aiuto">(compagno di camera)</span>' : '') +
+          '</li>'
+        ).join('');
+      } else if (partBox) {
+        partBox.hidden = true;
+        if (partLista) partLista.innerHTML = '';
+      }
+      const docs = r.documenti || [];
+      const boxDocs = $('#pagina-iscrizione-documenti-box');
+      const lista = $('#pagina-iscrizione-documenti');
+      if (docs.length) {
+        boxDocs.hidden = false;
+        lista.innerHTML = docs.map(d =>
+          '<li><a class="btn btn-secondario" href="' + esc(d.url) + '" target="_blank" rel="noopener noreferrer">' +
+          'Scarica: ' + esc(d.nome) + '</a></li>'
+        ).join('');
+      } else {
+        boxDocs.hidden = true;
+        lista.innerHTML = '';
+      }
+      document.title = (isc.codice ? isc.codice + ' · ' : '') +
+        (ev.titolo || 'Iscrizione') + ' · Vieni e seguimi';
+      pag.focus();
+    } catch (err) {
+      $('#pagina-iscrizione-caricamento').hidden = true;
+      $('#pagina-iscrizione-errore').hidden = false;
+      const msg = $('#pagina-iscrizione-errore-msg');
+      if (msg) msg.textContent = err.message || msg.textContent;
+    }
+  }
+
+  if (uuidIscrizione) {
+    mostraPaginaIscrizione(uuidIscrizione);
+    return;
   }
 
   const modulo = $('#modulo');
@@ -161,7 +260,7 @@
   let CAMPI_PASSO = [
     ['nome', 'cognome', 'data_nascita', 'tutore'],
     ['email', 'telefono', 'indirizzo', 'comune', 'parrocchiano_dichiarato'],
-    ['sistemazione', 'compagno_camera', 'esigenze', 'note'],
+    ['sistemazione', 'compagno_nome', 'compagno_cognome', 'esigenze', 'note'],
     ['consenso_privacy'],
   ];
   let FOCUS_PASSO = ['#nome', '#email', 'input[name=sistemazione]', '#consenso_privacy'];
@@ -192,7 +291,7 @@
       CAMPI_PASSO = [
         ['nome', 'cognome', 'data_nascita', 'tutore'],
         ['email', 'telefono', 'indirizzo', 'comune', 'parrocchiano_dichiarato'],
-        ['sistemazione', 'compagno_camera', 'esigenze', 'note'],
+        ['sistemazione', 'compagno_nome', 'compagno_cognome', 'esigenze', 'note'],
         ['documenti_confermati'],
         ['consenso_privacy'],
       ];
@@ -215,7 +314,7 @@
       CAMPI_PASSO = [
         ['nome', 'cognome', 'data_nascita', 'tutore'],
         ['email', 'telefono', 'indirizzo', 'comune', 'parrocchiano_dichiarato'],
-        ['sistemazione', 'compagno_camera', 'esigenze', 'note'],
+        ['sistemazione', 'compagno_nome', 'compagno_cognome', 'esigenze', 'note'],
         ['consenso_privacy'],
       ];
       FOCUS_PASSO = ['#nome', '#email', 'input[name=sistemazione]', '#consenso_privacy'];
@@ -240,6 +339,14 @@
     document.querySelectorAll('[data-evento]').forEach(el => { el.textContent = ev[el.dataset.evento] || ''; });
     document.title = ev.titolo + (ev.meta ? ' · ' + ev.meta : '') + ' · Vieni e seguimi';
     configuraPassiDocumenti(ev.documenti || []);
+    const campoParr = $('#campo-parrocchiano');
+    if (campoParr) {
+      const on = ev.verifica_parrocchiani !== false;
+      campoParr.hidden = !on;
+      if (!on) {
+        campoParr.querySelectorAll('input[type=radio]').forEach(r => { r.checked = false; });
+      }
+    }
   }
 
   function formatAperturaIt(isoLocal) {
@@ -347,10 +454,11 @@
   function valori() {
     const f = new FormData(modulo);
     const v = {};
-    ['nome', 'cognome', 'email', 'telefono', 'indirizzo', 'comune', 'compagno_camera', 'tutore', 'esigenze', 'note', 'sito_web']
+    ['nome', 'cognome', 'email', 'telefono', 'indirizzo', 'comune', 'compagno_nome', 'compagno_cognome', 'tutore', 'esigenze', 'note', 'sito_web']
       .forEach(k => { v[k] = String(f.get(k) || '').trim(); });
     v.parrocchiano_dichiarato = f.get('parrocchiano_dichiarato') || '';
     v.sistemazione = f.get('sistemazione') || '';
+    if (v.sistemazione !== 'doppia') { v.compagno_nome = ''; v.compagno_cognome = ''; }
     v.consenso_privacy = $('#consenso_privacy').checked;
     v.documenti_confermati = haDocumenti && $('#documenti_confermati') && $('#documenti_confermati').checked;
     // Preferisci ISO dal date nativo; altrimenti interpreta gg/mm/aaaa digitato
@@ -396,6 +504,19 @@
     $('#campo-tutore').hidden = !(e !== null && e < 18);
   }
 
+  function aggiornaCompagno() {
+    const doppia = !!(modulo.querySelector('input[name=sistemazione]:checked')
+      && modulo.querySelector('input[name=sistemazione]:checked').value === 'doppia');
+    const blocco = $('#blocco-compagno');
+    if (blocco) blocco.hidden = !doppia;
+    if (!doppia) {
+      const n = $('#compagno_nome');
+      const c = $('#compagno_cognome');
+      if (n) n.value = '';
+      if (c) c.value = '';
+    }
+  }
+
   function salvaBozza() {
     const v = valori();
     delete v.consenso_privacy; delete v.documenti_confermati; delete v.sito_web;
@@ -405,14 +526,19 @@
   }
   const bozza = memoria.leggi(BOZZA);
   imposta(bozza);
+  aggiornaCompagno();
   if (bozza && Number.isInteger(+bozza.passo) && +bozza.passo >= 0 && +bozza.passo < PASSI) passo = +bozza.passo;
   modulo.addEventListener('input', salvaBozza);
-  modulo.addEventListener('change', salvaBozza);
+  modulo.addEventListener('change', () => { aggiornaCompagno(); salvaBozza(); });
+  modulo.querySelectorAll('input[name=sistemazione]').forEach(r => {
+    r.addEventListener('change', aggiornaCompagno);
+  });
 
   const ETICHETTE = {
     nome: 'Nome', cognome: 'Cognome', data_nascita: 'Data di nascita', tutore: 'Genitore o tutore',
     email: 'Email', telefono: 'Telefono', indirizzo: 'Indirizzo', comune: 'Comune di residenza',
     parrocchiano_dichiarato: 'Parrocchia', sistemazione: 'Camera',
+    compagno_nome: 'Nome compagno', compagno_cognome: 'Cognome compagno',
     documenti_confermati: 'Documenti', consenso_privacy: 'Consenso',
   };
   const PRIMO_INPUT = {
@@ -434,8 +560,19 @@
     else if (!/^[+0-9 ()./-]{6,}$/.test(v.telefono)) e.telefono = 'Il numero può contenere solo cifre, spazi e +';
     if (!v.indirizzo) e.indirizzo = 'Scrivi via e numero civico';
     if (!v.comune) e.comune = 'Scrivi il comune di residenza';
-    if (!v.parrocchiano_dichiarato) e.parrocchiano_dichiarato = 'Scegli una risposta';
+    const chiediParr = !(evento && evento.verifica_parrocchiani === false);
+    if (chiediParr && !v.parrocchiano_dichiarato) e.parrocchiano_dichiarato = 'Scegli una risposta';
     if (!v.sistemazione) e.sistemazione = 'Scegli il tipo di camera';
+    else if (v.sistemazione !== 'singola' && v.sistemazione !== 'doppia') e.sistemazione = 'Scegli camera singola o doppia';
+    if (v.sistemazione === 'doppia') {
+      if (!v.compagno_nome) e.compagno_nome = 'Scrivi il nome del compagno di camera';
+      if (!v.compagno_cognome) e.compagno_cognome = 'Scrivi il cognome del compagno di camera';
+      if (v.compagno_nome && v.compagno_cognome
+          && v.compagno_nome.toLowerCase() === v.nome.toLowerCase()
+          && v.compagno_cognome.toLowerCase() === v.cognome.toLowerCase()) {
+        e.compagno_nome = 'Il compagno di camera deve essere una persona diversa';
+      }
+    }
     if (haDocumenti && !v.documenti_confermati) e.documenti_confermati = 'Scarica i documenti e conferma di averli presi in visione';
     if (!v.consenso_privacy) e.consenso_privacy = 'Serve il consenso per registrare l\'iscrizione';
     return e;
@@ -556,7 +693,7 @@
     bottone.textContent = 'Invio in corso…';
     try {
       const r = await api('iscrivi', { slug, dati: v });
-      mostraRicevuta(v, r.codice, r.stato);
+      mostraRicevuta(v, r);
     } catch (err) {
       if (err.codice === 'dati_non_validi' && err.dati.campi) {
         const campi = err.dati.campi;
@@ -569,6 +706,10 @@
           apertura_il: evento && evento.apertura_il,
           evento: evento,
         });
+      } else if (err.codice === 'singole_esaurite') {
+        mostraErrori({ sistemazione: err.message || 'Le camere singole sono esaurite.' });
+        const dest = PASSO_CAMPO.sistemazione;
+        if (Number.isFinite(dest) && dest !== passo) vaiA(dest, { senzaScroll: true });
       } else {
         erroreInvio.textContent = err.codice === 'rete'
           ? 'Non siamo riusciti a inviare l\'iscrizione. Controlla la connessione e premi di nuovo "Invia iscrizione": quello che hai scritto è ancora qui.'
@@ -583,24 +724,61 @@
   });
 
   let ultimiContatti = {};
-  function mostraRicevuta(v, codice, stato) {
+  function mostraRicevuta(v, risposta) {
+    const codice = risposta && risposta.codice;
+    const stato = risposta && risposta.stato;
+    const urlPagina = risposta && risposta.url;
+    let posto = risposta && risposta.posto;
+    if (posto == null && codice) {
+      const m = String(codice).match(/(\d+)\s*$/);
+      posto = m ? Number(m[1]) : null;
+    }
     ultimiContatti = {};
     CONTATTI.forEach(k => { ultimiContatti[k] = v[k]; });
     memoria.togli(BOZZA);
     $('#ricevuta-nome').textContent = v.nome + ' ' + v.cognome;
     $('#ricevuta-email').textContent = v.email;
-    $('#timbro-codice').textContent = codice;
-    $('#timbro-data').textContent = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const etichetta = $('#posto-etichetta');
+    const num = $('#posto-numero');
+    const cod = $('#posto-codice');
+    if (etichetta) {
+      etichetta.textContent = stato === 'lista_attesa'
+        ? 'Numero in lista d’attesa'
+        : 'Numero in lista da gestire';
+    }
+    if (num) num.textContent = posto != null ? String(posto) : '—';
+    if (cod) cod.textContent = codice || '';
     const seguito = $('#ricevuta-seguito');
     if (seguito) {
       seguito.textContent = stato === 'lista_attesa'
         ? 'I posti sono al momento esauriti: sei in lista d’attesa. La segreteria ti scriverà se si libera un posto o quando l’iscrizione sarà confermata.'
-        : 'La segreteria controllerà l’iscrizione e ti scriverà solo quando sarà confermata. Per ora non devi fare altro.';
+        : 'La segreteria controllerà la pratica e ti scriverà quando l’iscrizione sarà confermata. Per ora non devi fare altro.';
+    }
+    const compagnoEl = $('#ricevuta-compagno');
+    const compagni = (risposta && risposta.compagni) || [];
+    if (compagnoEl) {
+      if (compagni.length) {
+        const nomi = compagni.map(c => ((c.nome || '') + ' ' + (c.cognome || '')).trim()).filter(Boolean);
+        compagnoEl.textContent = 'Camera doppia con ' + nomi.join(', ') +
+          (compagni[0] && compagni[0].codice ? ' (codice ' + compagni[0].codice + ')' : '') + '.';
+        compagnoEl.hidden = false;
+      } else {
+        compagnoEl.textContent = '';
+        compagnoEl.hidden = true;
+      }
+    }
+    const linkBox = $('#ricevuta-link-box');
+    const linkA = $('#ricevuta-link');
+    if (linkBox && linkA && urlPagina) {
+      linkA.href = urlPagina;
+      linkA.textContent = urlPagina;
+      linkBox.hidden = false;
+    } else if (linkBox) {
+      linkBox.hidden = true;
     }
     modulo.hidden = true;
     const r = $('#ricevuta');
     r.hidden = false;
-    const t = r.querySelector('.timbro'); t.replaceWith(t.cloneNode(true));
     window.scrollTo({ top: 0 });
     r.focus();
   }

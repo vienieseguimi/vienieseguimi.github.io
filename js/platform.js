@@ -73,6 +73,7 @@
       $('#form-titolo').textContent = 'Modifica ente';
       $('#ente-id').value = ente.id;
       $('#ente-nome').value = ente.nome;
+      $('#ente-logo').value = ente.logoUrl || '';
       $('#ente-sub').value = ente.subdomain;
       $('#ente-api').value = ente.apiUrl;
       $('#ente-attivo').checked = !!ente.attivo;
@@ -80,6 +81,7 @@
       $('#form-titolo').textContent = 'Nuovo ente';
       $('#ente-id').value = '';
       $('#form-ente').reset();
+      $('#ente-logo').value = '';
       $('#ente-attivo').checked = true;
     }
     $('#ente-nome').focus();
@@ -140,6 +142,7 @@
         ente: {
           id: $('#ente-id').value || undefined,
           nome: $('#ente-nome').value.trim(),
+          logoUrl: $('#ente-logo').value.trim(),
           subdomain: $('#ente-sub').value.trim().toLowerCase(),
           apiUrl: $('#ente-api').value.trim(),
           attivo: $('#ente-attivo').checked,

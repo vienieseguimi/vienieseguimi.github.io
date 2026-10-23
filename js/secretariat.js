@@ -24,10 +24,7 @@
       '</p><p><a href="/">Torna alla home</a></p></div></main>';
     return;
   }
-  if (cfg.ente && cfg.ente.nome) {
-    const h = document.querySelector('#vista-accesso h1');
-    if (h) h.textContent = 'Segreteria · ' + cfg.ente.nome;
-  }
+  /* Nome e logo org: applicaBrandingEnte in tenant.js (header + footer portale). */
   const $ = s => document.querySelector(s);
   const SESSIONE = 'pellegrinaggio.sessione';
   const NOME = 'pellegrinaggio.nome-segreteria';
@@ -38,7 +35,7 @@
     confermata: 'Confermata', rifiutata: 'Non confermata', annullata: 'Annullata',
   };
   const DICHIARA = { si: 'dice di sì', no: 'dice di no', non_so: 'non lo sa' };
-  const SIST = { singola: 'singola', doppia: 'doppia', tripla: 'tripla', indifferente: 'camera indifferente' };
+  const SIST = { singola: 'singola', doppia: 'doppia' };
   const STATO_ED = { bozza: 'Bozza', aperta: 'Aperta', chiusa: 'Chiusa', archivio: 'Archivio' };
 
   const FRASI_LOG = {
@@ -55,6 +52,7 @@
 
   const s = {
     token: null, nome: '',
+    vista: 'home', // 'home' | 'gestione'
     slug: '', edizioni: [], evento: null,
     versione: 0, caricato: false, righe: new Map(),
     filtro: 'in_attesa', cerca: '', parr: '',
@@ -88,14 +86,43 @@
     }
   }
 
+  function verificaParrocchianiAttiva() {
+    return !(s.evento && s.evento.verifica_parrocchiani === false);
+  }
+
+  function aggiornaUiVerificaParrocchiani() {
+    const on = verificaParrocchianiAttiva();
+    document.querySelectorAll('[data-solo-verifica-parrocchiani]').forEach(el => {
+      el.hidden = !on;
+    });
+    document.querySelectorAll('th.c-parr, td.c-parr').forEach(el => {
+      el.hidden = !on;
+    });
+    if (!on && s.parr) {
+      s.parr = '';
+      const sel = $('#filtro-parr');
+      if (sel) sel.value = '';
+    }
+  }
+
   function applicaEvento(ev) {
     if (!ev) return;
     s.evento = ev;
-    document.title = (s.nonViste ? '(' + s.nonViste + ') ' : '') + (ev.titolo || 'Segreteria') + ' · Vieni e seguimi';
+    if (s.vista === 'gestione') {
+      document.title = (s.nonViste ? '(' + s.nonViste + ') ' : '') + (ev.titolo || 'Segreteria') + ' · Vieni e seguimi';
+      const tit = $('#barra-ed-titolo');
+      if (tit) tit.textContent = ev.titolo || ev.slug || '';
+    }
     const link = $('#ed-link-pubblico');
-    if (link && ev.slug) { link.href = urlEdizione(ev.slug); link.textContent = 'Modulo: /' + ev.slug + '/'; }
+    const linkBox = $('#ed-link-box');
+    if (link && ev.slug) {
+      link.href = urlEdizione(ev.slug);
+      link.textContent = 'Modulo pubblico: /' + ev.slug + '/';
+      if (linkBox) linkBox.hidden = false;
+    }
     aggiornaPostiRiepilogo();
     aggiornaAperturaHint(ev.motivoChiusura !== undefined ? ev.motivoChiusura : null);
+    aggiornaUiVerificaParrocchiani();
   }
 
   function contaOccupatiLocali() {
@@ -104,14 +131,31 @@
     return n;
   }
 
+  function numeroPosto(codice) {
+    const m = String(codice || '').match(/(\d+)\s*$/);
+    return m ? parseInt(m[1], 10) : null;
+  }
+
   function aggiornaPostiRiepilogo() {
     const el = $('#posti-riepilogo');
     if (!el) return;
     const posti = s.evento && Number(s.evento.posti) || 0;
-    if (!posti) { el.textContent = ''; el.dataset.pieni = '0'; return; }
+    const testo = $('#posti-testo');
+    const fill = $('#posti-fill');
+    if (!posti) {
+      el.hidden = true;
+      el.dataset.pieni = '0';
+      if (testo) testo.textContent = '';
+      if (fill) fill.style.width = '0%';
+      return;
+    }
     const occ = contaOccupatiLocali();
     const lista = Array.from(s.righe.values()).filter(r => r.stato === 'lista_attesa').length;
-    el.textContent = occ + ' / ' + posti + ' posti' + (lista ? ' · ' + lista + ' in lista' : '');
+    el.hidden = false;
+    if (testo) {
+      testo.textContent = occ + ' / ' + posti + ' posti' + (lista ? ' · ' + lista + ' in lista' : '');
+    }
+    if (fill) fill.style.width = Math.min(100, Math.round((occ / posti) * 100)) + '%';
     el.dataset.pieni = occ >= posti ? '1' : '0';
   }
 
@@ -125,48 +169,123 @@
     return new URLSearchParams(location.search).get('e') || memoria.leggi(EDIZIONE) || '';
   }
 
-  function popolaSelettore() {
-    const sel = $('#sel-edizione');
-    sel.innerHTML = s.edizioni.map(e =>
-      '<option value="' + esc(e.slug) + '"' + (e.slug === s.slug ? ' selected' : '') + '>' +
-      esc(e.titolo || e.slug) + (e.meta ? ' · ' + esc(e.meta) : '') + ' (' + esc(STATO_ED[e.stato] || e.stato) + ')</option>'
-    ).join('');
+  function renderHomeEdizioni() {
+    const ul = $('#home-lista');
+    const vuoto = $('#home-vuoto');
+    if (!ul) return;
+    const lista = s.edizioni.slice().sort((a, b) => {
+      const ordine = { aperta: 0, bozza: 1, chiusa: 2, archivio: 3 };
+      return (ordine[a.stato] ?? 9) - (ordine[b.stato] ?? 9) || String(b.titolo || '').localeCompare(String(a.titolo || ''), 'it');
+    });
+    ul.innerHTML = lista.map(e => {
+      const meta = [e.meta, e.quando].filter(Boolean).join(' · ');
+      return '<li class="home-card" data-slug="' + esc(e.slug) + '">' +
+        '<div class="home-card-testo">' +
+        '<p class="home-card-stato"><span class="pillola s-ed-' + esc(e.stato) + '">' + esc(STATO_ED[e.stato] || e.stato) + '</span></p>' +
+        '<h3 class="home-card-titolo">' + esc(e.titolo || e.slug) + '</h3>' +
+        (meta ? '<p class="home-card-meta">' + esc(meta) + '</p>' : '') +
+        '<p class="home-card-slug">/' + esc(e.slug) + '/</p>' +
+        '</div>' +
+        '<div class="home-card-azioni">' +
+        '<button type="button" class="btn" data-home="apri" data-slug="' + esc(e.slug) + '">Apri</button>' +
+        '<button type="button" class="btn btn-secondario btn-piccolo" data-home="modifica" data-id="' + esc(e.id) + '">Impostazioni</button>' +
+        '</div>' +
+        '</li>';
+    }).join('');
+    if (vuoto) vuoto.hidden = lista.length > 0;
   }
 
   async function caricaEdizioni() {
     const r = await api('edizioni_elenco', { token: s.token });
     s.edizioni = r.edizioni || [];
-    if (!s.edizioni.length) throw new Error('Nessun pellegrinaggio. Creane uno da «Pellegrinaggi…».');
-    let scelta = slugDaQuery();
-    if (!s.edizioni.some(e => e.slug === scelta)) scelta = s.edizioni[0].slug;
-    await selezionaEdizione(scelta, { silenzioso: true });
-    popolaSelettore();
+    renderHomeEdizioni();
+    const scelta = slugDaQuery();
+    if (scelta && s.edizioni.some(e => e.slug === scelta)) {
+      await apriGestione(scelta, { silenzioso: true });
+    } else {
+      mostraHome({ silenzioso: true });
+    }
   }
 
-  async function selezionaEdizione(slug, opz) {
-    if (!slug) return;
-    s.slug = slug;
-    memoria.scrivi(EDIZIONE, slug);
-    const ed = s.edizioni.find(e => e.slug === slug);
-    if (ed) applicaEvento(ed);
-    s.versione = 0; s.caricato = false; s.righe.clear(); s.selezionato = null;
+  function mostraHome(opz) {
+    s.vista = 'home';
+    fermaAggiornamenti();
+    s.slug = '';
+    s.evento = null;
+    s.versione = 0;
+    s.caricato = false;
+    s.righe.clear();
+    s.selezionato = null;
     $('#dettaglio').hidden = true;
     document.body.classList.remove('con-dettaglio');
+    chiudiEdizioni();
+
+    const url = new URL(location.href);
+    url.searchParams.delete('e');
+    history.replaceState(null, '', url.pathname + (url.searchParams.toString() ? '?' + url.searchParams : ''));
+    if (!opz || !opz.silenzioso) memoria.togli(EDIZIONE);
+
+    $('#vista-home').hidden = false;
+    $('#vista-gestione').hidden = true;
+    $('#barra-nav-gestione').hidden = true;
+    $('#live').hidden = true;
+    $('#barra-apertura').hidden = true;
+    $('#barra-h1').textContent = 'Segreteria';
+    document.title = 'Segreteria · Vieni e seguimi';
+    renderHomeEdizioni();
+    programmaAttivita();
+  }
+
+  async function apriGestione(slug, opz) {
+    if (!slug) return;
+    const ed = s.edizioni.find(e => e.slug === slug);
+    if (!ed) {
+      avviso('Pellegrinaggio non trovato.', 'errore');
+      return mostraHome();
+    }
+    s.vista = 'gestione';
+    s.slug = slug;
+    memoria.scrivi(EDIZIONE, slug);
+    applicaEvento(ed);
+    s.versione = 0;
+    s.caricato = false;
+    s.righe.clear();
+    s.selezionato = null;
+    $('#dettaglio').hidden = true;
+    document.body.classList.remove('con-dettaglio');
+
     const url = new URL(location.href);
     url.searchParams.set('e', slug);
-    history.replaceState(null, '', url.pathname + url.search);
-    if (!opz || !opz.silenzioso) popolaSelettore();
+    history.replaceState(null, '', url.pathname + '?' + url.searchParams.toString());
+
+    $('#vista-home').hidden = true;
+    $('#vista-gestione').hidden = false;
+    $('#barra-nav-gestione').hidden = false;
+    $('#live').hidden = false;
+    $('#barra-apertura').hidden = false;
+    $('#barra-h1').textContent = 'Iscrizioni';
+    $('#barra-ed-titolo').textContent = ed.titolo || ed.slug;
     render();
     await aggiorna();
+    programmaAttivita();
+  }
+
+  async function selezionaEdizione(slug) {
+    await apriGestione(slug);
   }
 
   // ================= Accesso =================
   function mostraAccesso(messaggio) {
     fermaAggiornamenti();
     s.token = null;
+    s.vista = 'home';
+    s.slug = '';
     memoria.togli(SESSIONE, 'sessione');
-    $('#vista-pannello').hidden = true;
+    $('#vista-app').hidden = true;
+    $('#vista-home').hidden = true;
+    $('#vista-gestione').hidden = true;
     $('#dettaglio').hidden = true;
+    chiudiEdizioni();
     $('#vista-accesso').hidden = false;
     $('#acc-nome').value = memoria.leggi(NOME) || '';
     const e = $('#acc-errore');
@@ -199,19 +318,28 @@
     s.versione = 0; s.caricato = false; s.righe.clear();
     $('#utente-nome').textContent = nome;
     $('#vista-accesso').hidden = true;
-    $('#vista-pannello').hidden = false;
+    $('#vista-app').hidden = false;
     try {
       await caricaEdizioni();
     } catch (err) {
       avviso(err.message || 'Impossibile caricare i pellegrinaggi.', 'errore');
-      $('#pannello-edizioni').hidden = false;
-      renderListaEdizioni();
+      mostraHome({ silenzioso: true });
     }
     caricaAttivita();
     programmaAttivita();
   }
 
-  $('#sel-edizione').addEventListener('change', e => selezionaEdizione(e.target.value));
+  $('#torna-home').addEventListener('click', () => mostraHome());
+  $('#home-nuovo').addEventListener('click', () => apriFormEdizione(null));
+  $('#home-lista').addEventListener('click', e => {
+    const btn = e.target.closest('[data-home]');
+    if (!btn) return;
+    if (btn.dataset.home === 'apri') apriGestione(btn.dataset.slug);
+    if (btn.dataset.home === 'modifica') {
+      const ed = s.edizioni.find(x => x.id === btn.dataset.id);
+      if (ed) apriFormEdizione(ed);
+    }
+  });
 
   // ================= Aggiornamento live =================
   function fermaAggiornamenti() {
@@ -256,14 +384,16 @@
   }
 
   function renderAttivita() {
-    const lista = $('#attivita-lista');
-    const vuoto = $('#attivita-vuoto');
-    if (!lista) return;
-    lista.innerHTML = s.attivita.map(function (ev) {
+    const html = s.attivita.map(function (ev) {
       return '<li><time class="attivita-quando" datetime="' + esc(ev.creato_il || '') + '">' +
         esc(quandoLog(ev.creato_il)) + '</time><p class="attivita-frase">' + esc(fraseLog(ev)) + '</p></li>';
     }).join('');
-    if (vuoto) vuoto.hidden = s.attivita.length > 0;
+    document.querySelectorAll('[data-attivita-lista]').forEach(function (lista) {
+      lista.innerHTML = html;
+    });
+    document.querySelectorAll('[data-attivita-vuoto]').forEach(function (vuoto) {
+      vuoto.hidden = s.attivita.length > 0;
+    });
   }
 
   async function caricaAttivita() {
@@ -280,19 +410,20 @@
     }
   }
 
-  const btnAttivita = $('#attivita-aggiorna');
-  if (btnAttivita) btnAttivita.addEventListener('click', function () { caricaAttivita(); });
+  document.querySelectorAll('[data-attivita-aggiorna]').forEach(function (btn) {
+    btn.addEventListener('click', function () { caricaAttivita(); });
+  });
 
   function programma() {
-    fermaAggiornamenti();
-    if (!s.token || document.hidden) return;
+    clearTimeout(s.timer); s.timer = null;
+    if (!s.token || document.hidden || s.vista !== 'gestione' || !s.slug) return;
     const attesa = s.errori ? Math.min(60000, cfg.intervalloAggiornamento * Math.pow(2, s.errori)) : cfg.intervalloAggiornamento;
     s.timer = setTimeout(aggiorna, attesa);
     if (s.errori) impostaLive('errore', 'Connessione persa · riprovo tra ' + Math.round(attesa / 1000) + ' s');
   }
 
   async function aggiorna() {
-    if (!s.token || s.inCorso || !s.slug) return;
+    if (!s.token || s.inCorso || !s.slug || s.vista !== 'gestione') return;
     s.inCorso = true;
     const primaVolta = !s.caricato;
     try {
@@ -349,7 +480,7 @@
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return fermaAggiornamenti();
     s.nonViste = 0; aggiornaTitolo();
-    aggiorna();
+    if (s.vista === 'gestione') aggiorna();
     caricaAttivita();
     programmaAttivita();
   });
@@ -361,7 +492,10 @@
   }
 
   function aggiornaTitolo() {
-    document.title = (s.nonViste ? '(' + s.nonViste + ') ' : '') + 'Segreteria · Vieni e seguimi';
+    const titolo = s.vista === 'gestione' && s.evento && s.evento.titolo
+      ? s.evento.titolo
+      : 'Segreteria';
+    document.title = (s.nonViste ? '(' + s.nonViste + ') ' : '') + titolo + ' · Vieni e seguimi';
   }
 
   // ================= Elenco =================
@@ -380,6 +514,10 @@
     const conta = { in_attesa: 0, lista_attesa: 0, confermata: 0, rifiutata: 0, annullata: 0, tutte: s.righe.size };
     s.righe.forEach(r => { conta[r.stato] = (conta[r.stato] || 0) + 1; });
     document.querySelectorAll('[data-conta]').forEach(b => { b.textContent = conta[b.dataset.conta] || 0; });
+    document.querySelectorAll('[data-filtro]').forEach(b => {
+      const n = conta[b.dataset.filtro] || 0;
+      b.classList.toggle('scheda-vuota', b.dataset.filtro !== 'tutte' && n === 0);
+    });
     aggiornaPostiRiepilogo();
 
     const lista = filtrate();
@@ -442,24 +580,31 @@
     const occ = s.occupate.has(r.id);
     const v = r.parrocchiano_verificato;
     const minore = eta(r.data_nascita) < 18;
+    const posto = numeroPosto(r.codice);
+    const quandoTxt = quando(r.creato_il);
     let azione = '';
     if (r.stato === 'in_attesa') {
-      azione = `<button type="button" class="btn btn-timbro btn-piccolo" data-azione="conferma" ${v === 'da_verificare' || occ ? 'disabled' : ''}
-           ${v === 'da_verificare' ? 'title="Indica prima se è parrocchiano"' : ''}>Conferma</button>`;
+      const serveVerifica = verificaParrocchianiAttiva() && v === 'da_verificare';
+      azione = `<button type="button" class="btn btn-timbro btn-piccolo" data-azione="conferma" ${serveVerifica || occ ? 'disabled' : ''}
+           ${serveVerifica ? 'title="Indica prima se è parrocchiano"' : ''}>Conferma</button>`;
     } else if (r.stato === 'lista_attesa') {
       const pieni = postiLiberi() <= 0;
       azione = `<button type="button" class="btn btn-secondario btn-piccolo" data-azione="promuovi" ${occ || pieni ? 'disabled' : ''}
            ${pieni ? 'title="Posti esauriti"' : 'title="Passa tra le da gestire"'}>Promuovi</button>`;
     }
     return `
-      <td class="c-codice">${esc(r.codice)}</td>
+      <td class="c-codice" title="${esc(r.codice)}">
+        <span class="n-posto">${posto != null ? posto : '—'}</span>
+        <span class="n-codice">${esc(r.codice)}</span>
+      </td>
       <td class="c-persona">
         <button type="button" class="link nome" data-azione="apri">${esc(nomeDi(r))}</button>
-        <span class="dettagli">${esc(eta(r.data_nascita))} anni${minore ? ' · <b>minorenne</b>' : ''} · ${esc(SIST[r.sistemazione] || r.sistemazione)}${r.esigenze ? ' · <span title="' + esc(r.esigenze) + '">esigenze</span>' : ''}</span>
+        <span class="dettagli">${r.data_nascita ? esc(eta(r.data_nascita)) + ' anni' : '—'}${minore ? ' · <b>minorenne</b>' : ''} · ${esc(SIST[r.sistemazione] || r.sistemazione)}${r.ruolo_gruppo === 'compagno' ? ' · <b>compagno</b>' : ''}${r.sistemazione === 'doppia' && r.compagno_camera ? ' · con ' + esc(r.compagno_camera) : ''}${r.esigenze ? ' · <span title="' + esc(r.esigenze) + '">esigenze</span>' : ''}</span>
       </td>
+      <td class="c-meta-mobile">${esc(r.comune)}${quandoTxt ? ' · ' + esc(quandoTxt) : ''}</td>
       <td class="c-comune">${esc(r.comune)}</td>
-      <td class="c-quando"><time datetime="${esc(r.creato_il)}">${esc(quando(r.creato_il))}</time></td>
-      <td class="c-parr">
+      <td class="c-quando"><time datetime="${esc(r.creato_il)}">${esc(quandoTxt)}</time></td>
+      <td class="c-parr"${verificaParrocchianiAttiva() ? '' : ' hidden'}>
         <div class="segmenti piccoli" role="group" aria-label="Parrocchiano: ${esc(nomeDi(r))}">
           <button type="button" data-azione="verifica" data-v="si" aria-pressed="${v === 'si'}" ${occ ? 'disabled' : ''}>Sì</button>
           <button type="button" data-azione="verifica" data-v="no" aria-pressed="${v === 'no'}" ${occ ? 'disabled' : ''}>No</button>
@@ -511,7 +656,7 @@
         applicaEvento(r.edizione);
         const i = s.edizioni.findIndex(x => x.slug === s.slug);
         if (i >= 0) s.edizioni[i] = Object.assign({}, s.edizioni[i], r.edizione);
-        popolaSelettore();
+        renderHomeEdizioni();
       }
       avviso(r.aperte ? 'Il modulo pubblico accetta di nuovo iscrizioni.' : 'Iscrizioni chiuse: il modulo pubblico ora lo dice.');
     } catch (err) {
@@ -573,13 +718,23 @@
     if (ritornoFocus && document.contains(ritornoFocus)) ritornoFocus.focus();
   }
   $('#det-chiudi').addEventListener('click', chiudiDettaglio);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && s.selezionato) chiudiDettaglio(); });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (!$('#pannello-edizioni').hidden) { chiudiEdizioni(); return; }
+    if (s.selezionato) chiudiDettaglio();
+  });
 
   function renderDettaglio(primaApertura) {
     const r = s.righe.get(s.selezionato);
     if (!r) return;
     const occ = s.occupate.has(r.id);
-    $('#det-codice').textContent = r.codice;
+    const posto = numeroPosto(r.codice);
+    const detPosto = $('#det-posto');
+    if (detPosto) {
+      detPosto.textContent = posto != null ? String(posto) : '';
+      detPosto.title = r.stato === 'lista_attesa' ? 'Numero in lista d’attesa' : 'Numero in lista da gestire';
+    }
+    $('#det-codice').textContent = 'Codice ' + r.codice;
     $('#det-nome').textContent = r.nome + ' ' + r.cognome;
     $('#det-stato').innerHTML = `<span class="pillola grande s-${esc(r.stato)}">${esc(STATO[r.stato])}</span>` +
       (r.gestito_da ? `<span class="aiuto">ultima modifica di ${esc(r.gestito_da)}, ${esc(quando(r.aggiornato_il))}</span>` : '');
@@ -592,7 +747,8 @@
     const az = [];
     const pieni = postiLiberi() <= 0;
     const giaOccupante = r.stato === 'confermata' || r.stato === 'in_attesa';
-    const confermaDisab = r.parrocchiano_verificato === 'da_verificare' || occ || (!giaOccupante && pieni);
+    const serveVerifica = verificaParrocchianiAttiva() && r.parrocchiano_verificato === 'da_verificare';
+    const confermaDisab = serveVerifica || occ || (!giaOccupante && pieni);
     if (r.stato === 'in_attesa' || r.stato === 'lista_attesa') {
       az.push(`<button type="button" class="btn btn-timbro" data-det="confermata" ${confermaDisab ? 'disabled' : ''}
         ${!giaOccupante && pieni ? 'title="Posti esauriti"' : ''}>Conferma iscrizione</button>`);
@@ -612,22 +768,28 @@
     }
     if (r.stato !== 'annullata') az.push(`<button type="button" class="btn btn-secondario btn-piccolo" data-det="annullata" ${occ ? 'disabled' : ''} title="La persona ha rinunciato">Annulla iscrizione</button>`);
     let aiutoAz = '';
-    if ((r.stato === 'in_attesa' || r.stato === 'lista_attesa') && r.parrocchiano_verificato === 'da_verificare') {
+    if (serveVerifica && (r.stato === 'in_attesa' || r.stato === 'lista_attesa')) {
       aiutoAz = '<p class="aiuto">Per confermare, indica prima se è parrocchiano.</p>';
     } else if (!giaOccupante && pieni && (r.stato === 'lista_attesa' || r.stato === 'rifiutata' || r.stato === 'annullata')) {
       aiutoAz = '<p class="aiuto">Posti esauriti: libera un posto (lista d’attesa o annulla) prima di promuovere o confermare.</p>';
     }
     $('#det-azioni').innerHTML = az.join('') + aiutoAz;
 
+    const nascitaTxt = r.data_nascita
+      ? (r.data_nascita.split('-').reverse().join('/') + ' (' + eta(r.data_nascita) + ' anni)')
+      : '—';
+    const ruoloTxt = r.ruolo_gruppo === 'compagno' ? 'Compagno di camera'
+      : (r.sistemazione === 'doppia' ? 'Richiedente (camera doppia)' : '');
     const dati = [
-      ['Nata/o il', r.data_nascita.split('-').reverse().join('/') + ' (' + eta(r.data_nascita) + ' anni)'],
+      ruoloTxt ? ['Ruolo', ruoloTxt] : null,
+      ['Nata/o il', nascitaTxt],
       r.tutore ? ['Genitore o tutore', r.tutore] : null,
       ['Email', `<a href="mailto:${esc(r.email)}">${esc(r.email)}</a>`, true],
       ['Telefono', `<a href="tel:${esc(r.telefono.replace(/[^+0-9]/g, ''))}">${esc(r.telefono)}</a>`, true],
       ['Indirizzo', r.indirizzo],
       ['Comune di residenza', r.comune],
       ['Camera', SIST[r.sistemazione] || r.sistemazione],
-      r.compagno_camera ? ['In camera con', r.compagno_camera] : null,
+      r.compagno_camera ? ['In camera con', r.compagno_camera + (r.gruppo_id ? ' · stesso stato di iscrizione' : '')] : null,
       r.esigenze ? ['Esigenze', r.esigenze] : null,
       r.note ? ['Note della persona', r.note] : null,
       r.motivo_rifiuto ? ['Motivo non conferma', r.motivo_rifiuto] : null,
@@ -691,7 +853,8 @@
     const col = [
       ['codice', 'Codice'], ['stato', 'Stato'], ['parrocchiano_verificato', 'Parrocchiano'], ['cognome', 'Cognome'], ['nome', 'Nome'],
       ['data_nascita', 'Data di nascita'], ['email', 'Email'], ['telefono', 'Telefono'], ['indirizzo', 'Indirizzo'], ['comune', 'Comune di residenza'],
-      ['sistemazione', 'Camera'], ['compagno_camera', 'In camera con'], ['tutore', 'Tutore'], ['esigenze', 'Esigenze'],
+      ['sistemazione', 'Camera'], ['ruolo_gruppo', 'Ruolo gruppo'], ['gruppo_id', 'Gruppo'],
+      ['compagno_camera', 'In camera con'], ['tutore', 'Tutore'], ['esigenze', 'Esigenze'],
       ['note', 'Note persona'], ['note_segreteria', 'Note segreteria'], ['creato_il', 'Iscritta il'], ['gestito_da', 'Gestita da'],
     ];
     // Neutralizza le formule (CSV/formula injection): Excel esegue celle che iniziano con = + - @ tab o CR.
@@ -719,17 +882,6 @@
   }
 
   // ================= Gestione pellegrinaggi =================
-  function renderListaEdizioni() {
-    const ul = $('#ed-lista');
-    ul.innerHTML = s.edizioni.map(e =>
-      '<li class="ed-item' + (e.slug === s.slug ? ' corrente' : '') + '">' +
-      '<button type="button" class="link ed-apri" data-slug="' + esc(e.slug) + '"><strong>' + esc(e.titolo || e.slug) + '</strong></button>' +
-      '<span class="aiuto">' + esc(e.slug) + ' · ' + esc(STATO_ED[e.stato] || e.stato) + '</span>' +
-      '<button type="button" class="btn btn-secondario btn-piccolo ed-modifica" data-id="' + esc(e.id) + '">Modifica</button>' +
-      '</li>'
-    ).join('') || '<li class="aiuto">Nessun pellegrinaggio.</li>';
-  }
-
   function renderDocumentiEdizione(docs) {
     const box = $('#ed-documenti-box');
     const lista = $('#ed-documenti-lista');
@@ -748,13 +900,13 @@
   }
 
   function apriFormEdizione(ed) {
-    $('#ed-form').hidden = false;
     $('#ed-errore').hidden = true;
+    $('#ed-titolo').textContent = ed ? 'Impostazioni' : 'Nuovo pellegrinaggio';
     $('#ed-form-titolo').textContent = ed ? 'Modifica pellegrinaggio' : 'Nuovo pellegrinaggio';
     $('#ed-id').value = ed ? ed.id : '';
     $('#ed-slug').value = ed ? ed.slug : '';
     $('#ed-slug').disabled = !!ed;
-    $('#ed-parrocchia').value = ed ? ed.parrocchia : '';
+    $('#ed-parrocchia').value = ed ? ed.parrocchia : (cfg.ente && cfg.ente.nome) || '';
     $('#ed-titolo-campo').value = ed ? ed.titolo : '';
     $('#ed-meta').value = ed ? ed.meta : '';
     $('#ed-quando').value = ed ? ed.quando : '';
@@ -764,19 +916,32 @@
     $('#ed-chiusura').value = ed ? (ed.chiusura || '') : '';
     $('#ed-contatto').value = ed ? ed.contatto : '';
     $('#ed-posti').value = ed ? (ed.posti || 0) : 50;
+    $('#ed-verifica-parrocchiani').checked = ed ? ed.verifica_parrocchiani !== false : true;
     $('#ed-prefisso').value = ed ? (ed.prefisso_codice || 'PG-') : 'PG-';
     $('#ed-stato').value = ed ? ed.stato : 'bozza';
+    const linkBox = $('#ed-link-box');
+    const link = $('#ed-link-pubblico');
+    if (ed && ed.slug && link) {
+      link.href = urlEdizione(ed.slug);
+      link.textContent = 'Modulo pubblico: /' + ed.slug + '/';
+      if (linkBox) linkBox.hidden = false;
+    } else if (linkBox) {
+      linkBox.hidden = true;
+    }
     renderDocumentiEdizione(ed ? (ed.documenti || []) : []);
+    $('#pannello-edizioni').hidden = false;
+    $('#pannello-edizioni').focus();
   }
 
+  function chiudiEdizioni() {
+    const pan = $('#pannello-edizioni');
+    if (pan) pan.hidden = true;
+  }
   $('#gestisci-edizioni').addEventListener('click', () => {
-    $('#pannello-edizioni').hidden = false;
-    $('#ed-form').hidden = true;
-    renderListaEdizioni();
-    $('#pannello-edizioni').focus();
+    const ed = s.edizioni.find(e => e.slug === s.slug);
+    if (ed) apriFormEdizione(ed);
   });
-  $('#ed-chiudi').addEventListener('click', () => { $('#pannello-edizioni').hidden = true; });
-  $('#ed-nuova').addEventListener('click', () => apriFormEdizione(null));
+  $('#ed-chiudi').addEventListener('click', chiudiEdizioni);
   $('#ed-setup').addEventListener('click', async () => {
     if (!window.confirm('Eseguire la manutenzione (setup)? Allinea fogli, cartelle Drive e trigger. Di solito serve dopo un aggiornamento del sistema.')) return;
     const btn = $('#ed-setup');
@@ -795,16 +960,7 @@
       btn.textContent = testo;
     }
   });
-  $('#ed-annulla').addEventListener('click', () => { $('#ed-form').hidden = true; });
-  $('#ed-lista').addEventListener('click', e => {
-    const apri = e.target.closest('.ed-apri');
-    if (apri) { selezionaEdizione(apri.dataset.slug); return; }
-    const mod = e.target.closest('.ed-modifica');
-    if (mod) {
-      const ed = s.edizioni.find(x => x.id === mod.dataset.id);
-      if (ed) apriFormEdizione(ed);
-    }
-  });
+  $('#ed-annulla').addEventListener('click', chiudiEdizioni);
   $('#ed-form').addEventListener('submit', async ev => {
     ev.preventDefault();
     const err = $('#ed-errore');
@@ -822,6 +978,7 @@
       chiusura: $('#ed-chiusura').value.trim(),
       contatto: $('#ed-contatto').value.trim(),
       posti: Number($('#ed-posti').value) || 0,
+      verifica_parrocchiani: $('#ed-verifica-parrocchiani').checked,
       prefisso_codice: $('#ed-prefisso').value.trim() || 'PG-',
       stato: $('#ed-stato').value,
     };
@@ -833,20 +990,27 @@
       const i = s.edizioni.findIndex(x => x.id === ed.id);
       if (i >= 0) s.edizioni[i] = Object.assign({}, s.edizioni[i], ed);
       else s.edizioni.push(ed);
-      popolaSelettore();
-      renderListaEdizioni();
+      renderHomeEdizioni();
       if (!id) {
-        // Nuova edizione: resta sul form per caricare i documenti
+        // Nuova edizione: resta sul form per caricare i documenti, poi si può aprire
         $('#ed-id').value = ed.id;
         $('#ed-slug').disabled = true;
+        $('#ed-titolo').textContent = 'Impostazioni';
         $('#ed-form-titolo').textContent = 'Modifica pellegrinaggio';
+        const linkBox = $('#ed-link-box');
+        const link = $('#ed-link-pubblico');
+        if (link) {
+          link.href = urlEdizione(ed.slug);
+          link.textContent = 'Modulo pubblico: /' + ed.slug + '/';
+          if (linkBox) linkBox.hidden = false;
+        }
         renderDocumentiEdizione(ed.documenti || []);
-        avviso('Pellegrinaggio creato. Ora puoi caricare i documenti.');
+        avviso('Pellegrinaggio creato. Puoi caricare i documenti o aprirlo dalla home.');
       } else {
-        $('#ed-form').hidden = true;
+        chiudiEdizioni();
         avviso('Pellegrinaggio salvato: ' + ed.slug);
+        if (s.vista === 'gestione' && s.slug === ed.slug) applicaEvento(ed);
       }
-      if (!s.slug || s.slug === ed.slug) await selezionaEdizione(ed.slug);
     } catch (ex) {
       err.textContent = ex.message;
       err.hidden = false;

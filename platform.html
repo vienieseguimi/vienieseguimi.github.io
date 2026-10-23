@@ -78,6 +78,11 @@
         <input type="text" id="ente-nome" maxlength="120" required>
       </div>
       <div class="campo">
+        <label for="ente-logo">URL logo <span class="facoltativo">(facoltativo)</span></label>
+        <span class="aiuto">Immagine https://… Comparirà nell’header delle pagine /ente/; il logo di Vieni e seguimi resta nel footer.</span>
+        <input type="url" id="ente-logo" maxlength="500" spellcheck="false" placeholder="https://…">
+      </div>
+      <div class="campo">
         <label for="ente-sub">Percorso URL</label>
         <span class="aiuto">Indirizzo pubblico: /<strong id="hint-path">vanzago</strong>/ (solo lettere minuscole, numeri e trattini)</span>
         <input type="text" id="ente-sub" maxlength="48" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" spellcheck="false">
@@ -101,7 +106,11 @@
   </main>
   <footer class="plat-piede">
     <div class="colonna">
-      <p class="plat-piede-copy">© 2026 <a href="https://github.com/davidemainardi" rel="noopener noreferrer" target="_blank">Davide Mainardi</a> · <a href="#privacy" data-apri-privacy>Dati e privacy</a> · <span data-site-version></span></p>
+      <div class="piede-meta plat-piede-meta">
+        <p class="piede-copy">© 2026 <a href="https://github.com/davidemainardi" rel="noopener noreferrer" target="_blank">Davide Mainardi</a></p>
+        <p class="piede-privacy"><a href="#privacy" data-apri-privacy>Dati e privacy</a></p>
+        <p class="piede-versione" data-site-version></p>
+      </div>
     </div>
   </footer>
 </div>

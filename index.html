@@ -41,9 +41,9 @@
       <div class="testata-brand-riga">
         <a class="testata-indietro" id="link-portale-home" href="/" hidden aria-label="Tutte le comunità">←</a>
         <a class="brand" href="/" aria-label="Vieni e seguimi — home">
-          <img class="brand-mark" src="img/logo-icona.png" width="40" height="40" alt="">
+          <img class="brand-mark" data-brand-logo src="img/logo-icona.png" width="40" height="40" alt="">
           <span class="brand-testi">
-            <span class="brand-nome" id="home-parrocchia">Vieni e seguimi</span>
+            <span class="brand-nome" id="home-parrocchia" data-brand-nome>Vieni e seguimi</span>
             <span class="brand-sotto" id="home-brand-sotto">Iscrizioni ai pellegrinaggi</span>
           </span>
         </a>
@@ -105,7 +105,21 @@
         <p class="piede-etichetta">Comunità</p>
         <p><a href="/">Tutte le comunità</a></p>
       </div>
-      <p class="piede-copy">© 2026 <a href="https://github.com/davidemainardi" rel="noopener noreferrer" target="_blank">Davide Mainardi</a> · <a href="#privacy" data-apri-privacy>Dati e privacy</a> · <span data-site-version></span></p>
+      <div class="piede-blocco piede-portale" data-piede-portale hidden>
+        <p class="piede-etichetta">Piattaforma</p>
+        <a class="brand brand-piede" href="/" aria-label="Vieni e seguimi — portale">
+          <img class="brand-mark" src="img/logo-icona.png" width="32" height="32" alt="">
+          <span class="brand-testi">
+            <span class="brand-nome">Vieni e seguimi</span>
+            <span class="brand-sotto">Iscrizioni ai pellegrinaggi</span>
+          </span>
+        </a>
+      </div>
+      <div class="piede-meta">
+        <p class="piede-copy">© 2026 <a href="https://github.com/davidemainardi" rel="noopener noreferrer" target="_blank">Davide Mainardi</a></p>
+        <p class="piede-privacy"><a href="#privacy" data-apri-privacy>Dati e privacy</a></p>
+        <p class="piede-versione" data-site-version></p>
+      </div>
     </div>
   </footer>
 </div>
@@ -117,9 +131,9 @@
     <div class="testata-brand-riga">
       <a class="testata-indietro" id="link-home-testata" href="/" aria-label="Tutti i pellegrinaggi">←</a>
       <a class="brand" id="link-brand-modulo" href="/" aria-label="Torna all’elenco">
-        <img class="brand-mark" src="img/logo-icona.png" width="40" height="40" alt="">
+        <img class="brand-mark" data-brand-logo src="img/logo-icona.png" width="40" height="40" alt="">
         <span class="brand-testi">
-          <span class="brand-nome" data-evento="parrocchia">Vieni e seguimi</span>
+          <span class="brand-nome" data-brand-nome>Vieni e seguimi</span>
           <span class="brand-sotto">Iscrizioni ai pellegrinaggi</span>
         </span>
       </a>
@@ -302,7 +316,7 @@
           <input type="text" id="indirizzo" name="indirizzo" autocomplete="street-address" maxlength="150" required aria-describedby="indirizzo-errore">
         </div>
 
-        <fieldset class="campo scelta" data-campo="parrocchiano_dichiarato" aria-describedby="parrocchiano_dichiarato-errore">
+        <fieldset class="campo scelta" id="campo-parrocchiano" data-campo="parrocchiano_dichiarato" aria-describedby="parrocchiano_dichiarato-errore">
           <legend>Fai parte della nostra parrocchia?</legend>
           <p class="messaggio-errore" id="parrocchiano_dichiarato-errore"></p>
           <div class="opzioni in-riga">
@@ -317,22 +331,26 @@
         <legend><h2>Sistemazione</h2></legend>
 
         <fieldset class="campo scelta" data-campo="sistemazione" aria-describedby="sistemazione-errore">
-          <legend>Che camera preferisci?</legend>
-          <span class="aiuto">La segreteria farà il possibile per rispettare la preferenza.</span>
+          <legend>Che camera vuoi?</legend>
+          <span class="aiuto">Camera singola con supplemento (posti limitati). In doppia iscrivi anche il compagno di camera in questo modulo.</span>
           <p class="messaggio-errore" id="sistemazione-errore"></p>
           <div class="opzioni">
             <label class="opzione"><input type="radio" name="sistemazione" value="doppia"> Camera doppia</label>
             <label class="opzione"><input type="radio" name="sistemazione" value="singola"> <span>Camera singola <span class="aiuto-inline">· con supplemento</span></span></label>
-            <label class="opzione"><input type="radio" name="sistemazione" value="tripla"> Camera tripla</label>
-            <label class="opzione"><input type="radio" name="sistemazione" value="indifferente"> Per me è indifferente</label>
           </div>
         </fieldset>
 
-        <div class="campo" data-campo="compagno_camera">
-          <label for="compagno_camera">Con chi vuoi dividere la camera? <span class="facoltativo">(facoltativo)</span></label>
-          <span class="aiuto">Anche l’altra persona deve compilare il suo modulo.</span>
-          <p class="messaggio-errore" id="compagno_camera-errore"></p>
-          <input type="text" id="compagno_camera" name="compagno_camera" maxlength="150" aria-describedby="compagno_camera-errore">
+        <div class="campi-riga" id="blocco-compagno" hidden>
+          <div class="campo" data-campo="compagno_nome">
+            <label for="compagno_nome">Nome del compagno di camera</label>
+            <p class="messaggio-errore" id="compagno_nome-errore"></p>
+            <input type="text" id="compagno_nome" name="compagno_nome" maxlength="80" aria-describedby="compagno_nome-errore">
+          </div>
+          <div class="campo" data-campo="compagno_cognome">
+            <label for="compagno_cognome">Cognome del compagno di camera</label>
+            <p class="messaggio-errore" id="compagno_cognome-errore"></p>
+            <input type="text" id="compagno_cognome" name="compagno_cognome" maxlength="80" aria-describedby="compagno_cognome-errore">
+          </div>
         </div>
 
         <div class="campo" data-campo="esigenze">
@@ -397,23 +415,61 @@
   </form>
 
   <section id="ricevuta" class="ricevuta" hidden tabindex="-1" aria-labelledby="ricevuta-titolo">
-    <div class="credenziale">
-      <svg class="timbro" viewBox="0 0 200 200" aria-hidden="true">
-        <defs><path id="giro" d="M100,100 m-72,0 a72,72 0 1,1 144,0 a72,72 0 1,1 -144,0"/></defs>
-        <circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" stroke-width="5"/>
-        <circle cx="100" cy="100" r="56" fill="none" stroke="currentColor" stroke-width="2.5"/>
-        <text font-size="15" font-weight="700" fill="currentColor"><textPath href="#giro" textLength="446" lengthAdjust="spacing">ISCRIZIONE RICEVUTA ✦ PELLEGRINAGGIO ✦</textPath></text>
-        <text x="100" y="93" text-anchor="middle" font-size="14" fill="currentColor" id="timbro-data"></text>
-        <text x="100" y="118" text-anchor="middle" font-size="21" font-weight="700" fill="currentColor" id="timbro-codice"></text>
-      </svg>
+    <div class="congratulazioni">
+      <p class="congratulazioni-kicker">Congratulazioni</p>
       <h2 id="ricevuta-titolo">Iscrizione inviata</h2>
       <p class="ricevuta-nome" id="ricevuta-nome"></p>
-      <p>Ti abbiamo mandato un’email di <strong>riepilogo</strong> a <strong id="ricevuta-email"></strong> (non è una conferma). Se non la trovi, guarda nella posta indesiderata.</p>
-      <p id="ricevuta-seguito">La segreteria controllerà l’iscrizione e ti scriverà solo quando sarà confermata. Per ora non devi fare altro.</p>
+
+      <div class="posto-grande" role="group" aria-labelledby="posto-etichetta">
+        <p class="posto-etichetta" id="posto-etichetta">Numero in lista da gestire</p>
+        <p class="posto-numero" id="posto-numero"></p>
+        <p class="posto-codice">Codice <span id="posto-codice"></span></p>
+      </div>
+
+      <p>Ti arriverà un’email con il <strong>riepilogo</strong> di quanto hai inserito a <strong id="ricevuta-email"></strong>. Se non la trovi, guarda anche nella posta indesiderata.</p>
+      <p class="ricevuta-nota">Quell’email è solo un riepilogo: <strong>non è ancora la conferma</strong> dell’iscrizione.</p>
+      <p id="ricevuta-seguito">La segreteria controllerà la pratica e ti scriverà quando l’iscrizione sarà confermata. Per ora non devi fare altro.</p>
+      <p class="ricevuta-compagno aiuto" id="ricevuta-compagno" hidden></p>
+      <p class="ricevuta-link aiuto" id="ricevuta-link-box" hidden>
+        La tua pagina iscrizione (stato e documenti):
+        <a id="ricevuta-link" href="#" rel="noopener"></a>
+      </p>
     </div>
     <div class="azioni-ricevuta">
       <button type="button" class="btn" id="altra">Iscrivi un’altra persona</button>
       <p class="aiuto">Email, telefono e indirizzo restano compilati.</p>
+    </div>
+  </section>
+
+  <section id="pagina-iscrizione" class="pagina-iscrizione" hidden tabindex="-1" aria-labelledby="pagina-iscrizione-titolo">
+    <p class="pagina-iscrizione-caricamento" id="pagina-iscrizione-caricamento">Caricamento…</p>
+    <div id="pagina-iscrizione-errore" class="avviso" hidden>
+      <h2>Iscrizione non trovata</h2>
+      <p id="pagina-iscrizione-errore-msg">Il link non è valido o l’iscrizione non è più disponibile.</p>
+      <p class="aiuto"><a id="pagina-iscrizione-torna" href="/">Torna all’elenco</a></p>
+    </div>
+    <div id="pagina-iscrizione-corpo" hidden>
+      <p class="pagina-iscrizione-etichetta">La tua iscrizione</p>
+      <h2 id="pagina-iscrizione-titolo"></h2>
+      <p class="pagina-iscrizione-meta" id="pagina-iscrizione-meta"></p>
+      <div class="pagina-iscrizione-scheda">
+        <p class="pagina-iscrizione-nome" id="pagina-iscrizione-nome"></p>
+        <p class="pagina-iscrizione-codice">Codice <strong id="pagina-iscrizione-codice"></strong></p>
+        <p class="pagina-iscrizione-stato">
+          <span class="pillola" id="pagina-iscrizione-stato"></span>
+        </p>
+        <div id="pagina-iscrizione-partecipanti" class="pagina-iscrizione-partecipanti" hidden>
+          <p class="aiuto">Iscritti in questa pratica</p>
+          <ul id="pagina-iscrizione-partecipanti-lista"></ul>
+        </div>
+        <p class="aiuto" id="pagina-iscrizione-motivo" hidden></p>
+        <p class="aiuto" id="pagina-iscrizione-contatto"></p>
+      </div>
+      <div id="pagina-iscrizione-documenti-box" class="pagina-iscrizione-docs" hidden>
+        <h3>Documenti</h3>
+        <p class="aiuto">Puoi scaricarli di nuovo quando ti serve.</p>
+        <ul id="pagina-iscrizione-documenti" class="lista-documenti"></ul>
+      </div>
     </div>
   </section>
 
@@ -429,7 +485,11 @@
       <p class="piede-etichetta">Navigazione</p>
       <p><a id="link-home-piede" href="/">Torna all’elenco dei pellegrinaggi</a></p>
     </div>
-    <p class="piede-copy">© 2026 <a href="https://github.com/davidemainardi" rel="noopener noreferrer" target="_blank">Davide Mainardi</a> · <a href="#privacy" data-apri-privacy>Dati e privacy</a> · <span data-site-version></span></p>
+    <div class="piede-meta">
+      <p class="piede-copy">© 2026 <a href="https://github.com/davidemainardi" rel="noopener noreferrer" target="_blank">Davide Mainardi</a></p>
+      <p class="piede-privacy"><a href="#privacy" data-apri-privacy>Dati e privacy</a></p>
+      <p class="piede-versione" data-site-version></p>
+    </div>
   </div>
 </footer>
 </div>

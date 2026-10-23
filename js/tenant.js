@@ -94,6 +94,38 @@
     return locale && (u === '/api' || /^https?:\/\/localhost(?::\d+)?\/api$/.test(u));
   }
 
+  const LOGO_PORTALE = 'img/logo-icona.png';
+
+  /**
+   * Sulle pagine /<ente>/: nome (e logo se c’è) nell’header;
+   * se c’è il logo org, il logo del portale passa nel footer.
+   */
+  function applicaBrandingEnte(ente) {
+    const nome = ente && ente.nome ? String(ente.nome) : '';
+    const logoOrg = ente && ente.logoUrl ? String(ente.logoUrl).trim() : '';
+    const conLogoOrg = !!(nome && logoOrg && /^https:\/\//i.test(logoOrg));
+
+    document.querySelectorAll('[data-brand-nome]').forEach(function (el) {
+      if (nome) el.textContent = nome;
+    });
+    document.querySelectorAll('[data-brand-logo]').forEach(function (img) {
+      if (conLogoOrg) {
+        img.src = logoOrg;
+        img.alt = nome;
+        img.dataset.logoEnte = '1';
+      } else {
+        img.src = LOGO_PORTALE;
+        img.alt = '';
+        delete img.dataset.logoEnte;
+      }
+    });
+    document.querySelectorAll('[data-piede-portale]').forEach(function (el) {
+      el.hidden = !conLogoOrg;
+    });
+    document.body.classList.toggle('con-logo-ente', conLogoOrg);
+    document.body.classList.toggle('su-ente', !!nome);
+  }
+
   async function risolviTenant() {
     if (redirigiSegreteriaSeServe()) {
       return { mode: 'redirect' };
@@ -103,6 +135,7 @@
     if (!id) {
       cfg.ente = null;
       cfg.apiUrl = '';
+      applicaBrandingEnte(null);
       return { mode: 'apex', subdomain: '' };
     }
     try {
@@ -112,10 +145,12 @@
         throw Object.assign(new Error('Indirizzo del servizio non valido per questa comunità.'), { codice: 'api_non_valida' });
       }
       cfg.apiUrl = r.ente.apiUrl;
+      applicaBrandingEnte(r.ente);
       return { mode: 'ente', ente: r.ente, subdomain: id };
     } catch (err) {
       cfg.ente = null;
       cfg.apiUrl = '';
+      applicaBrandingEnte(null);
       return {
         mode: 'errore',
         subdomain: id,
@@ -142,5 +177,7 @@
     return (base || '') + '/' + id + p;
   }
 
-  window.PellTenant = { enteDaPath, risolviTenant, platformApi, urlEnte, pathParti };
+  window.PellTenant = {
+    enteDaPath, risolviTenant, platformApi, urlEnte, pathParti, applicaBrandingEnte,
+  };
 })();

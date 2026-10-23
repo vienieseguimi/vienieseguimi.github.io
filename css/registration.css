@@ -1,12 +1,13 @@
-/* Modulo pubblico — mobile first; tablet 640; desktop 960.
+/* Modulo pubblico — mobile first; tablet 640; desktop 960; wide 1200.
    Obiettivi UX: gerarchia chiara, niente vuoti morti, leggibile per utenti anziani. */
-html { height: 100%; }
+html { height: 100%; overflow-x: clip; }
 body {
   font-size: 1rem;
   min-height: 100%;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow-x: clip;
 }
 
 /* Vista a colonna: il footer resta in fondo alla pagina/viewport */
@@ -34,9 +35,16 @@ body {
 .testata {
   background: var(--inchiostro);
   color: #fff;
-  padding: .85rem 0 1rem;
+  padding: .55rem 0 .6rem;
   border-bottom: 3px solid var(--segnavia);
 }
+.testata .brand-mark {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+}
+.testata .brand-nome { font-size: .95rem; }
+.testata .brand-sotto { font-size: .72rem; margin-top: .05rem; }
 
 /* Pulsante indietro: solo freccia, stesso aspetto su home e modulo */
 .testata-indietro {
@@ -44,11 +52,11 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.15rem;
+  height: 2.15rem;
   margin: 0;
   padding: 0;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   line-height: 1;
   font-weight: 700;
   color: #fff;
@@ -67,15 +75,15 @@ body {
 .testata-brand-riga {
   display: flex;
   align-items: center;
-  gap: .75rem;
-  margin-bottom: .55rem;
+  gap: .55rem;
+  margin-bottom: .35rem;
   min-width: 0;
 }
 .testata-brand-riga .brand { margin-bottom: 0; min-width: 0; }
 
 .testata-griglia {
   display: grid;
-  gap: .65rem .75rem;
+  gap: .4rem .65rem;
   align-items: start;
 }
 .testata-titoli { min-width: 0; }
@@ -89,21 +97,21 @@ body {
 }
 .testata h1 .meta {
   display: block;
-  font-size: clamp(1.35rem, 4vw, 1.7rem);
+  font-size: clamp(1.2rem, 3.5vw, 1.5rem);
   font-weight: 700;
   color: #fff;
 }
 .testata h1 .meta:empty { display: none; }
 .testata h1 .titolo-evento {
   display: block;
-  margin-top: .35rem;
-  font-size: .95rem;
+  margin-top: .2rem;
+  font-size: .9rem;
   font-weight: 400;
   color: #c8d0dc;
 }
 .testata h1 .meta:empty + .titolo-evento {
   margin-top: 0;
-  font-size: clamp(1.35rem, 4vw, 1.7rem);
+  font-size: clamp(1.2rem, 3.5vw, 1.5rem);
   font-weight: 700;
   color: #fff;
 }
@@ -160,11 +168,11 @@ body {
 
 /* ---- Home */
 #vista-home .testata h1 {
-  font-size: clamp(1.35rem, 4vw, 1.7rem);
+  font-size: clamp(1.2rem, 3.5vw, 1.45rem);
   font-weight: 700;
   color: #fff;
 }
-.meta-home { color: #c8d0dc; margin: .5rem 0 0; font-size: .95rem; }
+.meta-home { color: #c8d0dc; margin: .2rem 0 0; font-size: .88rem; line-height: 1.3; }
 .lista-edizioni { display: grid; gap: .75rem; padding: 1.25rem 0 2rem; }
 .lista-enti { gap: 1rem; }
 .card-edizione {
@@ -181,6 +189,15 @@ body {
 .card-edizione:hover { border-color: var(--bordo); box-shadow: var(--ombra-media); }
 .card-edizione:active { transform: translateY(1px); }
 .card-ente { padding: 1.25rem 1.3rem 1.15rem; }
+.card-ente-logo {
+  display: block;
+  width: 3rem; height: 3rem;
+  object-fit: contain;
+  border-radius: 10px;
+  margin: 0 0 .65rem;
+  background: #fff;
+  border: 1px solid var(--bordo-tenue);
+}
 .card-ente h2 { font-size: 1.25rem; }
 .card-edizione h2 { font-size: 1.15rem; margin: 0 0 .25rem; }
 .card-edizione .meta-card {
@@ -547,32 +564,108 @@ fieldset.campo > legend, fieldset.scelta > legend {
   border-radius: var(--r-campo); padding: .65rem .8rem; font-size: .95rem;
 }
 
-/* ---- Ricevuta */
+/* ---- Ricevuta / congratulazioni */
 .ricevuta:focus { outline: none; }
-.credenziale {
-  position: relative;
-  border: 1.5px dashed var(--bordo);
-  border-radius: 10px;
-  padding: 1.1rem 1rem;
-  background: var(--carta);
+.congratulazioni {
+  text-align: center;
 }
-.timbro {
-  display: block; width: 112px; height: 112px; margin: 0 0 .9rem auto;
-  color: var(--timbro); transform: rotate(-9deg);
-  animation: timbra .55s cubic-bezier(.2, .9, .3, 1.25) both .15s;
+.congratulazioni-kicker {
+  margin: 0 0 .35rem;
+  font-size: .95rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--timbro);
 }
-@keyframes timbra {
-  0% { opacity: 0; transform: rotate(-9deg) scale(1.4); }
-  60% { opacity: 1; }
-  100% { opacity: 1; transform: rotate(-9deg) scale(1); }
+.ricevuta h2 { font-size: 1.55rem; margin: 0 0 .35rem; }
+.ricevuta-nome { font-size: 1.1em; font-weight: 700; margin: 0 0 1rem; }
+.posto-grande {
+  margin: 0 auto 1.15rem;
+  padding: 1rem 1.1rem 1.05rem;
+  max-width: 18rem;
+  border: 2px solid var(--timbro);
+  border-radius: 12px;
+  background: var(--timbro-tenue);
+  animation: posto-entra .5s cubic-bezier(.2, .9, .3, 1.15) both .05s;
 }
-.ricevuta h2 { font-size: 1.35rem; margin-bottom: .3rem; }
-.ricevuta-nome { font-size: 1.05em; font-weight: 700; margin: 0 0 .65rem; }
-.azioni-ricevuta { margin-top: 1.1rem; padding-top: .95rem; border-top: 1px solid var(--bordo-tenue); }
+@keyframes posto-entra {
+  from { opacity: 0; transform: scale(.92); }
+  to { opacity: 1; transform: none; }
+}
+.posto-etichetta {
+  margin: 0 0 .15rem;
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--grigio);
+}
+.posto-numero {
+  margin: 0;
+  font-size: clamp(3.2rem, 14vw, 4.6rem);
+  line-height: 1;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--inchiostro);
+  letter-spacing: -.02em;
+}
+.posto-codice {
+  margin: .45rem 0 0;
+  font-size: .92rem;
+  color: var(--grigio);
+  font-variant-numeric: tabular-nums;
+}
+.ricevuta-nota { margin: .55rem 0; }
+.azioni-ricevuta { margin-top: 1.1rem; padding-top: .95rem; border-top: 1px solid var(--bordo-tenue); text-align: center; }
 .azioni-ricevuta .aiuto { margin-top: .35rem; }
 
 .avviso { border-left: 4px solid var(--attesa); }
 .avviso h2 { font-size: 1.2rem; margin-bottom: .35rem; }
+
+.ricevuta-link { margin-top: 1rem; word-break: break-all; }
+.ricevuta-link a { font-weight: 700; }
+
+/* Pagina personale iscrizione (?uuid=) */
+.pagina-iscrizione {
+  background: var(--carta);
+  border: 1px solid var(--bordo-tenue);
+  border-radius: var(--r-superficie);
+  padding: 1.35rem 1.25rem 1.5rem;
+  box-shadow: var(--ombra-soft);
+  max-width: 42rem;
+}
+.pagina-iscrizione:focus { outline: none; }
+.pagina-iscrizione-caricamento { margin: 0; color: var(--grigio); }
+.pagina-iscrizione-etichetta {
+  margin: 0 0 .35rem;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--grigio);
+}
+.pagina-iscrizione-titolo { font-size: 1.45rem; margin: 0 0 .25rem; }
+.pagina-iscrizione-meta { margin: 0 0 1.15rem; color: var(--grigio); }
+.pagina-iscrizione-scheda {
+  padding: 1rem 1.05rem;
+  background: var(--pietra);
+  border-radius: var(--r-campo);
+  margin-bottom: 1.25rem;
+}
+.pagina-iscrizione-nome { margin: 0 0 .35rem; font-size: 1.15rem; font-weight: 700; }
+.pagina-iscrizione-codice { margin: 0 0 .75rem; font-variant-numeric: tabular-nums; }
+.pagina-iscrizione-stato { margin: 0 0 .5rem; }
+.pagina-iscrizione-docs h3 { font-size: 1.05rem; margin: 0 0 .35rem; }
+.pagina-iscrizione .pillola {
+  display: inline-block;
+  padding: .25rem .7rem;
+  border-radius: 999px;
+  font-size: .9rem;
+  font-weight: 700;
+}
+.pagina-iscrizione .s-in_attesa { background: var(--attesa-tenue); color: var(--attesa); }
+.pagina-iscrizione .s-lista_attesa { background: #f3eee4; color: #7a5c2e; }
+.pagina-iscrizione .s-confermata { background: var(--timbro-tenue); color: var(--timbro); }
+.pagina-iscrizione .s-rifiutata { background: var(--rifiuto-tenue); color: var(--rifiuto); }
+.pagina-iscrizione .s-annullata { background: #eceef1; color: var(--grigio); }
 
 /* Footer sticky in fondo (viewport se contenuto corto, fine pagina se lungo) */
 .piede {
@@ -581,42 +674,49 @@ fieldset.campo > legend, fieldset.scelta > legend {
   background: #dfe3ea;
   border-top: 1px solid var(--bordo);
   color: var(--grigio);
-  font-size: .88rem;
-  padding: .85rem 0 calc(.95rem + env(safe-area-inset-bottom));
+  font-size: .82rem;
+  padding: .55rem 0 calc(.55rem + env(safe-area-inset-bottom));
 }
 #vista-modulo .piede {
-  padding-bottom: calc(5.35rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
 }
 .piede-interno {
   display: grid;
-  gap: .65rem;
+  grid-template-columns: 1fr 1fr;
+  gap: .45rem .85rem;
+  align-items: start;
 }
 .piede-blocco { min-width: 0; }
 .piede-etichetta {
-  margin: 0 0 .15rem;
-  font-size: .7rem;
+  margin: 0 0 .1rem;
+  font-size: .65rem;
   font-weight: 700;
   letter-spacing: .04em;
   text-transform: uppercase;
   color: var(--inchiostro);
+  line-height: 1.2;
 }
-.piede p { margin: 0; line-height: 1.35; }
+.piede p { margin: 0; line-height: 1.3; }
 .piede a {
   font-weight: 700;
   color: var(--inchiostro);
   text-underline-offset: 3px;
 }
 .piede a:hover { color: var(--inchiostro-soft); }
-.piede-copy {
-  grid-column: 1 / -1;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  font-size: .8rem;
-  color: var(--grigio);
+.piede-portale .brand-piede { gap: .45rem; }
+.piede-portale .brand-mark {
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 6px;
 }
-.piede-copy a { font-weight: 700; }
-.piede-copy [data-site-version]:empty { display: none; }
+.piede-portale .brand-nome { font-size: .85rem; line-height: 1.2; }
+.piede-portale .brand-sotto { display: none; }
+.piede-meta {
+  grid-column: 1 / -1;
+  margin-top: .1rem;
+  padding-top: .45rem;
+  border-top: 1px solid var(--bordo);
+}
 
 /* =========================================================
    Tablet ≥ 640px
@@ -639,8 +739,8 @@ fieldset.campo > legend, fieldset.scelta > legend {
     padding-left: 1rem;
     border-left: 2px solid var(--segnavia);
   }
-  .testata h1 .meta { font-size: 1.55rem; }
-  .testata h1 .meta:empty + .titolo-evento { font-size: 1.55rem; }
+  .testata h1 .meta { font-size: 1.4rem; }
+  .testata h1 .meta:empty + .titolo-evento { font-size: 1.4rem; }
   .fatti dt, .fatti dd { font-size: .85rem; }
 
   .intro { max-width: 36em; }
@@ -680,14 +780,15 @@ fieldset.campo > legend, fieldset.scelta > legend {
   .barra-passi .invia { margin-left: auto; }
 
   .credenziale { padding: 1.25rem 140px 1.15rem 1.15rem; min-height: 150px; }
-  .timbro { position: absolute; right: 10px; top: 10px; margin: 0; width: 120px; height: 120px; }
-  .ricevuta h2 { font-size: 1.45rem; }
+  .ricevuta h2 { font-size: 1.7rem; }
+  .posto-grande { max-width: 20rem; padding: 1.15rem 1.25rem; }
+  .posto-numero { font-size: 4.8rem; }
 
-  .piede { padding: 1rem 0 1.1rem; }
-  #vista-modulo .piede { padding-bottom: 1.1rem; }
+  .piede { padding: .55rem 0 .6rem; }
+  #vista-modulo .piede { padding-bottom: .6rem; }
   .piede-interno {
-    grid-template-columns: 1fr 1fr;
-    gap: .65rem 1.75rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .4rem 1.25rem;
     align-items: start;
   }
   .lista-edizioni { gap: .85rem; padding: 1.5rem 0 2.5rem; }
@@ -701,8 +802,8 @@ fieldset.campo > legend, fieldset.scelta > legend {
   .colonna { max-width: 70rem; padding: 0 32px; }
 
   .testata-griglia { column-gap: 2.5rem; }
-  .testata h1 .meta { font-size: 1.7rem; }
-  .testata h1 .meta:empty + .titolo-evento { font-size: 1.7rem; }
+  .testata h1 .meta { font-size: 1.5rem; }
+  .testata h1 .meta:empty + .titolo-evento { font-size: 1.5rem; }
 
   main#contenuto {
     padding-top: 2.25rem;
@@ -809,7 +910,16 @@ fieldset.campo > legend, fieldset.scelta > legend {
   }
 }
 
+/* Tablet landscape / schermi medi: evita card troppo strette */
+@media (min-width: 640px) and (max-width: 959px) {
+  .lista-edizioni { grid-template-columns: 1fr 1fr; }
+  .campi-riga { grid-template-columns: 1fr 1fr; }
+}
+
+/* Telefono stretto e safe-area */
 @media (max-width: 360px) {
+  .colonna { padding-left: 12px; padding-right: 12px; }
+  .testata { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
   .stepper-label { font-size: .55rem; max-width: 3.6rem; }
   .stepper-num { width: 1.55rem; height: 1.55rem; font-size: .75rem; }
   .stepper-voce:not(:last-child)::after {
@@ -817,5 +927,5 @@ fieldset.campo > legend, fieldset.scelta > legend {
     left: calc(50% + .9rem);
     right: calc(-50% + .9rem);
   }
-  .colonna { padding: 0 12px; }
+  .btn, .barra-passi .btn { min-height: 44px; }
 }

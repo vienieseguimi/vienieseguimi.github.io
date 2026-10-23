@@ -129,14 +129,7 @@ body {
   margin: 0 auto;
   padding: 0 16px;
 }
-.plat-piede-copy { margin: 0; font-size: .82rem; }
-.plat-piede-copy [data-site-version]:empty { display: none; }
-.plat-piede a {
-  font-weight: 700;
-  color: var(--inchiostro);
-  text-underline-offset: 3px;
-}
-.plat-piede a:hover { color: var(--inchiostro-soft); }
+.plat-piede-meta { font-size: .82rem; }
 
 .visually-hidden {
   position: absolute !important;
