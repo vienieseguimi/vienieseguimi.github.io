@@ -155,17 +155,13 @@ a { color: var(--inchiostro); text-underline-offset: 3px; }
   display: block; font-weight: 700; margin-bottom: .28rem;
 }
 .aiuto { display: block; color: var(--grigio); font-size: .86em; margin: 0 0 .3rem; line-height: 1.35; }
-input[type=text], input[type=email], input[type=tel], input[type=password], input[type=search],
-input[type=url], input[type=number], input[type=date], input[type=datetime-local], input[type=time],
-select, textarea {
+input[type=text], input[type=email], input[type=tel], input[type=password], input[type=search], select, textarea {
   width: 100%; min-height: 44px; padding: .45rem .7rem;
   border: 1.5px solid var(--bordo); border-radius: var(--r-campo);
   background: var(--carta); color: var(--inchiostro); font: inherit;
   transition: border-color var(--transizione), box-shadow var(--transizione);
 }
 textarea { min-height: 5.5rem; resize: vertical; }
-/* Spunte e scelte: colore dell'app ovunque. :where() non pesa, così le regole locali (.opzione, .spunta, switch) restano libere. */
-:where(input[type=checkbox], input[type=radio]) { width: 1.15rem; height: 1.15rem; accent-color: var(--inchiostro); }
 input:hover, select:hover, textarea:hover { border-color: var(--grigio); }
 input:focus-visible, select:focus-visible, textarea:focus-visible {
   border-color: var(--inchiostro);
