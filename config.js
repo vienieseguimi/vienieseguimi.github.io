@@ -16,4 +16,6 @@ window.PELLEGRINAGGIO = {
   basePath: (window.PELLEGRINAGGIO_BOOT && window.PELLEGRINAGGIO_BOOT.basePath) || '',
 
   intervalloAggiornamento: 10000,
+
+  version: '0.2.3',
 };

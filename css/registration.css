@@ -616,6 +616,7 @@ fieldset.campo > legend, fieldset.scelta > legend {
   color: var(--grigio);
 }
 .piede-copy a { font-weight: 700; }
+.piede-copy [data-site-version]:empty { display: none; }
 
 /* =========================================================
    Tablet ≥ 640px

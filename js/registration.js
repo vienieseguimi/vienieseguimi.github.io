@@ -388,7 +388,7 @@
 
   const ETICHETTE = {
     nome: 'Nome', cognome: 'Cognome', data_nascita: 'Data di nascita', tutore: 'Genitore o tutore',
-    email: 'Email', telefono: 'Telefono', indirizzo: 'Indirizzo', comune: 'Comune',
+    email: 'Email', telefono: 'Telefono', indirizzo: 'Indirizzo', comune: 'Comune di residenza',
     parrocchiano_dichiarato: 'Parrocchia', sistemazione: 'Camera',
     documenti_confermati: 'Documenti', consenso_privacy: 'Consenso',
   };
@@ -410,7 +410,7 @@
     if (!v.telefono) e.telefono = 'Scrivi un numero di telefono';
     else if (!/^[+0-9 ()./-]{6,}$/.test(v.telefono)) e.telefono = 'Il numero può contenere solo cifre, spazi e +';
     if (!v.indirizzo) e.indirizzo = 'Scrivi via e numero civico';
-    if (!v.comune) e.comune = 'Scrivi il comune';
+    if (!v.comune) e.comune = 'Scrivi il comune di residenza';
     if (!v.parrocchiano_dichiarato) e.parrocchiano_dichiarato = 'Scegli una risposta';
     if (!v.sistemazione) e.sistemazione = 'Scegli il tipo di camera';
     if (haDocumenti && !v.documenti_confermati) e.documenti_confermati = 'Scarica i documenti e conferma di averli presi in visione';
@@ -533,7 +533,7 @@
     bottone.textContent = 'Invio in corso…';
     try {
       const r = await api('iscrivi', { slug, dati: v });
-      mostraRicevuta(v, r.codice);
+      mostraRicevuta(v, r.codice, r.stato);
     } catch (err) {
       if (err.codice === 'dati_non_validi' && err.dati.campi) {
         const campi = err.dati.campi;
@@ -556,7 +556,7 @@
   });
 
   let ultimiContatti = {};
-  function mostraRicevuta(v, codice) {
+  function mostraRicevuta(v, codice, stato) {
     ultimiContatti = {};
     CONTATTI.forEach(k => { ultimiContatti[k] = v[k]; });
     memoria.togli(BOZZA);
@@ -564,6 +564,12 @@
     $('#ricevuta-email').textContent = v.email;
     $('#timbro-codice').textContent = codice;
     $('#timbro-data').textContent = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const seguito = $('#ricevuta-seguito');
+    if (seguito) {
+      seguito.textContent = stato === 'lista_attesa'
+        ? 'I posti sono al momento esauriti: sei in lista d’attesa. La segreteria ti scriverà se si libera un posto o quando l’iscrizione sarà confermata.'
+        : 'La segreteria controllerà l’iscrizione e ti scriverà solo quando sarà confermata. Per ora non devi fare altro.';
+    }
     modulo.hidden = true;
     const r = $('#ricevuta');
     r.hidden = false;

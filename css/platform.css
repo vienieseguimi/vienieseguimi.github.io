@@ -130,6 +130,7 @@ body {
   padding: 0 16px;
 }
 .plat-piede-copy { margin: 0; font-size: .82rem; }
+.plat-piede-copy [data-site-version]:empty { display: none; }
 .plat-piede a {
   font-weight: 700;
   color: var(--inchiostro);

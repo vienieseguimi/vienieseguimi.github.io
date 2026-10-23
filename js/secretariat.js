@@ -33,7 +33,10 @@
   const NOME = 'pellegrinaggio.nome-segreteria';
   const EDIZIONE = 'pellegrinaggio.edizione';
 
-  const STATO = { in_attesa: 'Da gestire', confermata: 'Confermata', rifiutata: 'Non confermata', annullata: 'Annullata' };
+  const STATO = {
+    in_attesa: 'Da gestire', lista_attesa: 'Lista d’attesa',
+    confermata: 'Confermata', rifiutata: 'Non confermata', annullata: 'Annullata',
+  };
   const DICHIARA = { si: 'dice di sì', no: 'dice di no', non_so: 'non lo sa' };
   const SIST = { singola: 'singola', doppia: 'doppia', tripla: 'tripla', indifferente: 'camera indifferente' };
   const STATO_ED = { bozza: 'Bozza', aperta: 'Aperta', chiusa: 'Chiusa', archivio: 'Archivio' };
@@ -65,10 +68,33 @@
   function applicaEvento(ev) {
     if (!ev) return;
     s.evento = ev;
-    $('#su-posti').textContent = ev.posti ? ' / ' + ev.posti : '';
     document.title = (s.nonViste ? '(' + s.nonViste + ') ' : '') + (ev.titolo || 'Segreteria') + ' · Vieni e seguimi';
     const link = $('#ed-link-pubblico');
     if (link && ev.slug) { link.href = urlEdizione(ev.slug); link.textContent = 'Modulo: /' + ev.slug + '/'; }
+    aggiornaPostiRiepilogo();
+  }
+
+  function contaOccupatiLocali() {
+    let n = 0;
+    s.righe.forEach(r => { if (r.stato === 'confermata' || r.stato === 'in_attesa') n++; });
+    return n;
+  }
+
+  function aggiornaPostiRiepilogo() {
+    const el = $('#posti-riepilogo');
+    if (!el) return;
+    const posti = s.evento && Number(s.evento.posti) || 0;
+    if (!posti) { el.textContent = ''; el.dataset.pieni = '0'; return; }
+    const occ = contaOccupatiLocali();
+    const lista = Array.from(s.righe.values()).filter(r => r.stato === 'lista_attesa').length;
+    el.textContent = occ + ' / ' + posti + ' posti' + (lista ? ' · ' + lista + ' in lista' : '');
+    el.dataset.pieni = occ >= posti ? '1' : '0';
+  }
+
+  function postiLiberi() {
+    const posti = s.evento && Number(s.evento.posti) || 0;
+    if (!posti) return Infinity;
+    return Math.max(0, posti - contaOccupatiLocali());
   }
 
   function slugDaQuery() {
@@ -325,9 +351,10 @@
 
   function render() {
     // conteggi
-    const conta = { in_attesa: 0, confermata: 0, rifiutata: 0, annullata: 0, tutte: s.righe.size };
+    const conta = { in_attesa: 0, lista_attesa: 0, confermata: 0, rifiutata: 0, annullata: 0, tutte: s.righe.size };
     s.righe.forEach(r => { conta[r.stato] = (conta[r.stato] || 0) + 1; });
     document.querySelectorAll('[data-conta]').forEach(b => { b.textContent = conta[b.dataset.conta] || 0; });
+    aggiornaPostiRiepilogo();
 
     const lista = filtrate();
     const tbody = $('#righe');
@@ -359,6 +386,7 @@
         : s.righe.size === 0 ? 'Ancora nessuna iscrizione. Appena qualcuno compila il modulo comparirà qui, senza ricaricare la pagina.'
         : s.cerca || s.parr ? 'Nessuna iscrizione corrisponde ai filtri.'
         : s.filtro === 'in_attesa' ? 'Nessuna iscrizione da gestire. Le nuove compariranno qui da sole.'
+        : s.filtro === 'lista_attesa' ? 'Nessuno in lista d’attesa.'
         : 'Nessuna iscrizione in questo elenco.';
     }
   }
@@ -388,10 +416,15 @@
     const occ = s.occupate.has(r.id);
     const v = r.parrocchiano_verificato;
     const minore = eta(r.data_nascita) < 18;
-    const azione = r.stato === 'in_attesa'
-      ? `<button type="button" class="btn btn-timbro btn-piccolo" data-azione="conferma" ${v === 'da_verificare' || occ ? 'disabled' : ''}
-           ${v === 'da_verificare' ? 'title="Indica prima se è parrocchiano"' : ''}>Conferma</button>`
-      : '';
+    let azione = '';
+    if (r.stato === 'in_attesa') {
+      azione = `<button type="button" class="btn btn-timbro btn-piccolo" data-azione="conferma" ${v === 'da_verificare' || occ ? 'disabled' : ''}
+           ${v === 'da_verificare' ? 'title="Indica prima se è parrocchiano"' : ''}>Conferma</button>`;
+    } else if (r.stato === 'lista_attesa') {
+      const pieni = postiLiberi() <= 0;
+      azione = `<button type="button" class="btn btn-secondario btn-piccolo" data-azione="promuovi" ${occ || pieni ? 'disabled' : ''}
+           ${pieni ? 'title="Posti esauriti"' : 'title="Passa tra le da gestire"'}>Promuovi</button>`;
+    }
     return `
       <td class="c-codice">${esc(r.codice)}</td>
       <td class="c-persona">
@@ -425,6 +458,9 @@
     }
     if (b.dataset.azione === 'conferma') {
       modifica(id, { stato: 'confermata' }, { notifica: true, fatto: 'confermata' });
+    }
+    if (b.dataset.azione === 'promuovi') {
+      modifica(id, { stato: 'in_attesa' }, { notifica: false, fatto: 'promossa' });
     }
   });
 
@@ -528,21 +564,42 @@
     });
 
     const az = [];
+    const pieni = postiLiberi() <= 0;
+    const giaOccupante = r.stato === 'confermata' || r.stato === 'in_attesa';
+    const confermaDisab = r.parrocchiano_verificato === 'da_verificare' || occ || (!giaOccupante && pieni);
+    if (r.stato === 'in_attesa' || r.stato === 'lista_attesa') {
+      az.push(`<button type="button" class="btn btn-timbro" data-det="confermata" ${confermaDisab ? 'disabled' : ''}
+        ${!giaOccupante && pieni ? 'title="Posti esauriti"' : ''}>Conferma iscrizione</button>`);
+    }
+    if (r.stato === 'lista_attesa') {
+      az.push(`<button type="button" class="btn btn-secondario" data-det="in_attesa" ${occ || pieni ? 'disabled' : ''}
+        ${pieni ? 'title="Posti esauriti"' : ''}>Promuovi tra le da gestire</button>`);
+    }
+    if (r.stato === 'in_attesa' || r.stato === 'confermata') {
+      az.push(`<button type="button" class="btn btn-secondario" data-det="lista_attesa" ${occ ? 'disabled' : ''}>Metti in lista d’attesa</button>`);
+    }
     if (r.stato === 'in_attesa') {
-      az.push(`<button type="button" class="btn btn-timbro" data-det="confermata" ${r.parrocchiano_verificato === 'da_verificare' || occ ? 'disabled' : ''}>Conferma iscrizione</button>`);
       az.push(`<button type="button" class="btn btn-rifiuto" data-det="rifiuta" ${occ ? 'disabled' : ''}>Non confermare…</button>`);
     }
-    if (r.stato !== 'in_attesa') az.push(`<button type="button" class="btn btn-secondario" data-det="in_attesa" ${occ ? 'disabled' : ''}>Riporta tra le da gestire</button>`);
+    if (r.stato !== 'in_attesa' && r.stato !== 'lista_attesa') {
+      az.push(`<button type="button" class="btn btn-secondario" data-det="in_attesa" ${occ || (!giaOccupante && pieni) ? 'disabled' : ''}>Riporta tra le da gestire</button>`);
+    }
     if (r.stato !== 'annullata') az.push(`<button type="button" class="btn btn-secondario btn-piccolo" data-det="annullata" ${occ ? 'disabled' : ''} title="La persona ha rinunciato">Annulla iscrizione</button>`);
-    $('#det-azioni').innerHTML = az.join('') +
-      (r.stato === 'in_attesa' && r.parrocchiano_verificato === 'da_verificare' ? '<p class="aiuto">Per confermare, indica prima se è parrocchiano.</p>' : '');
+    let aiutoAz = '';
+    if ((r.stato === 'in_attesa' || r.stato === 'lista_attesa') && r.parrocchiano_verificato === 'da_verificare') {
+      aiutoAz = '<p class="aiuto">Per confermare, indica prima se è parrocchiano.</p>';
+    } else if (!giaOccupante && pieni && (r.stato === 'lista_attesa' || r.stato === 'rifiutata' || r.stato === 'annullata')) {
+      aiutoAz = '<p class="aiuto">Posti esauriti: libera un posto (lista d’attesa o annulla) prima di promuovere o confermare.</p>';
+    }
+    $('#det-azioni').innerHTML = az.join('') + aiutoAz;
 
     const dati = [
       ['Nata/o il', r.data_nascita.split('-').reverse().join('/') + ' (' + eta(r.data_nascita) + ' anni)'],
       r.tutore ? ['Genitore o tutore', r.tutore] : null,
       ['Email', `<a href="mailto:${esc(r.email)}">${esc(r.email)}</a>`, true],
       ['Telefono', `<a href="tel:${esc(r.telefono.replace(/[^+0-9]/g, ''))}">${esc(r.telefono)}</a>`, true],
-      ['Indirizzo', r.indirizzo + ', ' + r.comune],
+      ['Indirizzo', r.indirizzo],
+      ['Comune di residenza', r.comune],
       ['Camera', SIST[r.sistemazione] || r.sistemazione],
       r.compagno_camera ? ['In camera con', r.compagno_camera] : null,
       r.esigenze ? ['Esigenze', r.esigenze] : null,
@@ -607,7 +664,7 @@
   $('#esporta').addEventListener('click', () => {
     const col = [
       ['codice', 'Codice'], ['stato', 'Stato'], ['parrocchiano_verificato', 'Parrocchiano'], ['cognome', 'Cognome'], ['nome', 'Nome'],
-      ['data_nascita', 'Data di nascita'], ['email', 'Email'], ['telefono', 'Telefono'], ['indirizzo', 'Indirizzo'], ['comune', 'Comune'],
+      ['data_nascita', 'Data di nascita'], ['email', 'Email'], ['telefono', 'Telefono'], ['indirizzo', 'Indirizzo'], ['comune', 'Comune di residenza'],
       ['sistemazione', 'Camera'], ['compagno_camera', 'In camera con'], ['tutore', 'Tutore'], ['esigenze', 'Esigenze'],
       ['note', 'Note persona'], ['note_segreteria', 'Note segreteria'], ['creato_il', 'Iscritta il'], ['gestito_da', 'Gestita da'],
     ];

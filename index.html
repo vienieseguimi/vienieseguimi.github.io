@@ -8,7 +8,7 @@
 <title>Vieni e seguimi — iscrizioni ai pellegrinaggi</title>
 <meta name="description" content="Vieni e seguimi: iscrizioni ai pellegrinaggi della parrocchia.">
 <meta property="og:title" content="Vieni e seguimi — iscrizioni ai pellegrinaggi">
-<meta property="og:description" content="Compila il modulo per iscriverti. Ricevi subito un'email di conferma della ricezione.">
+<meta property="og:description" content="Compila il modulo per iscriverti. Ricevi subito un’email di riepilogo; la conferma arriva dalla segreteria.">
 <meta property="og:image" content="https://vienieseguimi.github.io/img/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -105,7 +105,7 @@
         <p class="piede-etichetta">Comunità</p>
         <p><a href="/">Tutte le comunità</a></p>
       </div>
-      <p class="piede-copy">© 2026 <a href="https://github.com/davidemainardi" rel="noopener noreferrer" target="_blank">Davide Mainardi</a> · <a href="#privacy" data-apri-privacy>Dati e privacy</a></p>
+      <p class="piede-copy">© 2026 <a href="https://github.com/davidemainardi" rel="noopener noreferrer" target="_blank">Davide Mainardi</a> · <a href="#privacy" data-apri-privacy>Dati e privacy</a> · <span data-site-version></span></p>
     </div>
   </footer>
 </div>
@@ -168,7 +168,7 @@
 
   <form id="modulo" novalidate hidden>
     <div class="modulo-guida">
-      <p class="intro">Compila in <strong class="accento" id="intro-passi-n">4</strong> <span id="intro-passi-label">passi</span>. Ricevi subito un’email; la segreteria ti riscrive quando l’iscrizione è confermata.</p>
+      <p class="intro">Compila in <strong class="accento" id="intro-passi-n">4</strong> <span id="intro-passi-label">passi</span>. Ricevi subito un’email di riepilogo (non è ancora la conferma); la segreteria ti riscrive quando l’iscrizione è confermata.</p>
 
       <nav class="stepper" aria-label="Passi dell’iscrizione">
         <ol class="stepper-lista" id="stepper">
@@ -263,7 +263,7 @@
 
         <div class="campo" data-campo="email">
           <label for="email">Email</label>
-          <span class="aiuto">Qui arrivano la ricevuta e la conferma.</span>
+          <span class="aiuto">Qui arriva subito il riepilogo; la conferma dell’iscrizione arriva dopo, dalla segreteria.</span>
           <p class="messaggio-errore" id="email-errore"></p>
           <input type="email" id="email" name="email" autocomplete="email" maxlength="120" required aria-describedby="email-errore" spellcheck="false">
         </div>
@@ -276,7 +276,7 @@
           </div>
 
           <div class="campo" data-campo="comune">
-            <label for="comune">Comune</label>
+            <label for="comune">Comune di residenza</label>
             <p class="messaggio-errore" id="comune-errore"></p>
             <input type="text" id="comune" name="comune" autocomplete="address-level2" maxlength="80" required aria-describedby="comune-errore">
           </div>
@@ -395,8 +395,8 @@
       </svg>
       <h2 id="ricevuta-titolo">Iscrizione inviata</h2>
       <p class="ricevuta-nome" id="ricevuta-nome"></p>
-      <p>Ti abbiamo mandato un’email a <strong id="ricevuta-email"></strong>. Se non la trovi, guarda nella posta indesiderata.</p>
-      <p>La segreteria controllerà l’iscrizione e ti scriverà quando sarà confermata. Per ora non devi fare altro.</p>
+      <p>Ti abbiamo mandato un’email di <strong>riepilogo</strong> a <strong id="ricevuta-email"></strong> (non è una conferma). Se non la trovi, guarda nella posta indesiderata.</p>
+      <p id="ricevuta-seguito">La segreteria controllerà l’iscrizione e ti scriverà solo quando sarà confermata. Per ora non devi fare altro.</p>
     </div>
     <div class="azioni-ricevuta">
       <button type="button" class="btn" id="altra">Iscrivi un’altra persona</button>
@@ -416,7 +416,7 @@
       <p class="piede-etichetta">Navigazione</p>
       <p><a id="link-home-piede" href="/">Torna all’elenco dei pellegrinaggi</a></p>
     </div>
-    <p class="piede-copy">© 2026 <a href="https://github.com/davidemainardi" rel="noopener noreferrer" target="_blank">Davide Mainardi</a> · <a href="#privacy" data-apri-privacy>Dati e privacy</a></p>
+    <p class="piede-copy">© 2026 <a href="https://github.com/davidemainardi" rel="noopener noreferrer" target="_blank">Davide Mainardi</a> · <a href="#privacy" data-apri-privacy>Dati e privacy</a> · <span data-site-version></span></p>
   </div>
 </footer>
 </div>
