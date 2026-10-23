@@ -547,28 +547,57 @@ fieldset.campo > legend, fieldset.scelta > legend {
   border-radius: var(--r-campo); padding: .65rem .8rem; font-size: .95rem;
 }
 
-/* ---- Ricevuta */
+/* ---- Ricevuta / congratulazioni */
 .ricevuta:focus { outline: none; }
-.credenziale {
-  position: relative;
-  border: 1.5px dashed var(--bordo);
-  border-radius: 10px;
-  padding: 1.1rem 1rem;
-  background: var(--carta);
+.congratulazioni {
+  text-align: center;
 }
-.timbro {
-  display: block; width: 112px; height: 112px; margin: 0 0 .9rem auto;
-  color: var(--timbro); transform: rotate(-9deg);
-  animation: timbra .55s cubic-bezier(.2, .9, .3, 1.25) both .15s;
+.congratulazioni-kicker {
+  margin: 0 0 .35rem;
+  font-size: .95rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--timbro);
 }
-@keyframes timbra {
-  0% { opacity: 0; transform: rotate(-9deg) scale(1.4); }
-  60% { opacity: 1; }
-  100% { opacity: 1; transform: rotate(-9deg) scale(1); }
+.ricevuta h2 { font-size: 1.55rem; margin: 0 0 .35rem; }
+.ricevuta-nome { font-size: 1.1em; font-weight: 700; margin: 0 0 1rem; }
+.posto-grande {
+  margin: 0 auto 1.15rem;
+  padding: 1rem 1.1rem 1.05rem;
+  max-width: 18rem;
+  border: 2px solid var(--timbro);
+  border-radius: 12px;
+  background: var(--timbro-tenue);
+  animation: posto-entra .5s cubic-bezier(.2, .9, .3, 1.15) both .05s;
 }
-.ricevuta h2 { font-size: 1.35rem; margin-bottom: .3rem; }
-.ricevuta-nome { font-size: 1.05em; font-weight: 700; margin: 0 0 .65rem; }
-.azioni-ricevuta { margin-top: 1.1rem; padding-top: .95rem; border-top: 1px solid var(--bordo-tenue); }
+@keyframes posto-entra {
+  from { opacity: 0; transform: scale(.92); }
+  to { opacity: 1; transform: none; }
+}
+.posto-etichetta {
+  margin: 0 0 .15rem;
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--grigio);
+}
+.posto-numero {
+  margin: 0;
+  font-size: clamp(3.2rem, 14vw, 4.6rem);
+  line-height: 1;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--inchiostro);
+  letter-spacing: -.02em;
+}
+.posto-codice {
+  margin: .45rem 0 0;
+  font-size: .92rem;
+  color: var(--grigio);
+  font-variant-numeric: tabular-nums;
+}
+.ricevuta-nota { margin: .55rem 0; }
+.azioni-ricevuta { margin-top: 1.1rem; padding-top: .95rem; border-top: 1px solid var(--bordo-tenue); text-align: center; }
 .azioni-ricevuta .aiuto { margin-top: .35rem; }
 
 .avviso { border-left: 4px solid var(--attesa); }
@@ -680,8 +709,9 @@ fieldset.campo > legend, fieldset.scelta > legend {
   .barra-passi .invia { margin-left: auto; }
 
   .credenziale { padding: 1.25rem 140px 1.15rem 1.15rem; min-height: 150px; }
-  .timbro { position: absolute; right: 10px; top: 10px; margin: 0; width: 120px; height: 120px; }
-  .ricevuta h2 { font-size: 1.45rem; }
+  .ricevuta h2 { font-size: 1.7rem; }
+  .posto-grande { max-width: 20rem; padding: 1.15rem 1.25rem; }
+  .posto-numero { font-size: 4.8rem; }
 
   .piede { padding: 1rem 0 1.1rem; }
   #vista-modulo .piede { padding-bottom: 1.1rem; }

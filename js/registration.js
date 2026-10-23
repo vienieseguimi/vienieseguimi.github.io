@@ -242,9 +242,32 @@
     configuraPassiDocumenti(ev.documenti || []);
   }
 
+  function formatAperturaIt(isoLocal) {
+    const s = String(isoLocal || '').trim();
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+    if (!m) return s;
+    return m[3] + '/' + m[2] + '/' + m[1] + ' alle ' + m[4] + ':' + m[5];
+  }
+
+  function mostraBloccoIscrizioni(r) {
+    modulo.hidden = true;
+    const chiuse = $('#chiuse');
+    const nonAncora = $('#non-ancora');
+    if (chiuse) chiuse.hidden = true;
+    if (nonAncora) nonAncora.hidden = true;
+    if (r.motivoChiusura === 'non_ancora' && nonAncora) {
+      const quando = formatAperturaIt(r.apertura_il || (r.evento && r.evento.apertura_il));
+      const el = $('#non-ancora-quando');
+      if (el) el.textContent = quando || 'l’orario indicato dalla segreteria';
+      nonAncora.hidden = false;
+    } else if (chiuse) {
+      chiuse.hidden = false;
+    }
+  }
+
   api('stato', { slug }, { timeoutMs: 15000 }).then(r => {
     applicaEvento(r.evento);
-    if (!r.aperte) { modulo.hidden = true; $('#chiuse').hidden = false; }
+    if (!r.aperte) mostraBloccoIscrizioni(r);
     else { modulo.hidden = false; aggiornaStepper(); }
   }).catch(err => {
     if (err.codice === 'edizione_non_trovata' || err.codice === 'dati_non_validi') {
@@ -533,15 +556,19 @@
     bottone.textContent = 'Invio in corso…';
     try {
       const r = await api('iscrivi', { slug, dati: v });
-      mostraRicevuta(v, r.codice, r.stato);
+      mostraRicevuta(v, r);
     } catch (err) {
       if (err.codice === 'dati_non_validi' && err.dati.campi) {
         const campi = err.dati.campi;
         const destinazione = Math.min(...Object.keys(campi).map(k => PASSO_CAMPO[k]).filter(n => n !== undefined));
         if (Number.isFinite(destinazione) && destinazione !== passo) vaiA(destinazione, { senzaScroll: true });
         mostraErrori(Number.isFinite(destinazione) ? erroriPasso(campi, destinazione) : campi);
-      } else if (err.codice === 'chiuse') {
-        modulo.hidden = true; $('#chiuse').hidden = false;
+      } else if (err.codice === 'chiuse' || err.codice === 'non_ancora') {
+        mostraBloccoIscrizioni({
+          motivoChiusura: err.codice,
+          apertura_il: evento && evento.apertura_il,
+          evento: evento,
+        });
       } else {
         erroreInvio.textContent = err.codice === 'rete'
           ? 'Non siamo riusciti a inviare l\'iscrizione. Controlla la connessione e premi di nuovo "Invia iscrizione": quello che hai scritto è ancora qui.'
@@ -556,24 +583,38 @@
   });
 
   let ultimiContatti = {};
-  function mostraRicevuta(v, codice, stato) {
+  function mostraRicevuta(v, risposta) {
+    const codice = risposta && risposta.codice;
+    const stato = risposta && risposta.stato;
+    let posto = risposta && risposta.posto;
+    if (posto == null && codice) {
+      const m = String(codice).match(/(\d+)\s*$/);
+      posto = m ? Number(m[1]) : null;
+    }
     ultimiContatti = {};
     CONTATTI.forEach(k => { ultimiContatti[k] = v[k]; });
     memoria.togli(BOZZA);
     $('#ricevuta-nome').textContent = v.nome + ' ' + v.cognome;
     $('#ricevuta-email').textContent = v.email;
-    $('#timbro-codice').textContent = codice;
-    $('#timbro-data').textContent = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const etichetta = $('#posto-etichetta');
+    const num = $('#posto-numero');
+    const cod = $('#posto-codice');
+    if (etichetta) {
+      etichetta.textContent = stato === 'lista_attesa'
+        ? 'Numero in lista d’attesa'
+        : 'Numero in lista da gestire';
+    }
+    if (num) num.textContent = posto != null ? String(posto) : '—';
+    if (cod) cod.textContent = codice || '';
     const seguito = $('#ricevuta-seguito');
     if (seguito) {
       seguito.textContent = stato === 'lista_attesa'
         ? 'I posti sono al momento esauriti: sei in lista d’attesa. La segreteria ti scriverà se si libera un posto o quando l’iscrizione sarà confermata.'
-        : 'La segreteria controllerà l’iscrizione e ti scriverà solo quando sarà confermata. Per ora non devi fare altro.';
+        : 'La segreteria controllerà la pratica e ti scriverà quando l’iscrizione sarà confermata. Per ora non devi fare altro.';
     }
     modulo.hidden = true;
     const r = $('#ricevuta');
     r.hidden = false;
-    const t = r.querySelector('.timbro'); t.replaceWith(t.cloneNode(true));
     window.scrollTo({ top: 0 });
     r.focus();
   }

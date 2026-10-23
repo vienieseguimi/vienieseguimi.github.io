@@ -9,7 +9,7 @@ window.PELLEGRINAGGIO = {
     ? '/platform-api'
     : 'https://script.google.com/macros/s/AKfycbzJU7dtWEvcPfhHoG_D1ZWTYsfTPEjukZ7PAvtvCzeYaqQbhwTAzZuIZCZf-Ha5tMTM/exec',
 
-  // Valorizzato da js/tenant.js dopo risolvi (su /<ente>/). Sulla home `/` resta vuoto (portale enti).
+  // Valorizzato da js/tenant.js dopo risolvi (su /<ente>/). Sulla home / resta vuoto (portale enti).
   apiUrl: '',
 
   // Prefisso del sito su GitHub Pages '' per organization; '/nome-repo' per progetto.
@@ -17,5 +17,18 @@ window.PELLEGRINAGGIO = {
 
   intervalloAggiornamento: 10000,
 
-  version: '0.2.3',
+  // Allineata a package.json; `npm run publish` la riscrive sulla copia pubblica.
+  version: '0.2.4',
 };
+
+(function riempiVersione() {
+  const v = window.PELLEGRINAGGIO && window.PELLEGRINAGGIO.version;
+  if (!v) return;
+  function applica() {
+    document.querySelectorAll('[data-site-version]').forEach(function (el) {
+      el.textContent = 'v' + v;
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applica);
+  else applica();
+})();

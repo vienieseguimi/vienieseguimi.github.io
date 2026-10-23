@@ -65,6 +65,28 @@
   const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const nomeDi = r => r.cognome + ' ' + r.nome;
 
+  function formatAperturaIt(isoLocal) {
+    const m = String(isoLocal || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+    if (!m) return String(isoLocal || '');
+    return m[3] + '/' + m[2] + '/' + m[1] + ' alle ' + m[4] + ':' + m[5];
+  }
+
+  function aggiornaAperturaHint(motivoChiusura) {
+    const hint = $('#apertura-hint');
+    if (!hint) return;
+    const apertura = s.evento && s.evento.apertura_il;
+    if (motivoChiusura === 'non_ancora' && apertura) {
+      hint.hidden = false;
+      hint.textContent = 'Apertura programmata ' + formatAperturaIt(apertura);
+    } else if (apertura && s.evento && s.evento.stato === 'aperta' && motivoChiusura === null) {
+      hint.hidden = false;
+      hint.textContent = 'Aperte dal ' + formatAperturaIt(apertura);
+    } else {
+      hint.hidden = true;
+      hint.textContent = '';
+    }
+  }
+
   function applicaEvento(ev) {
     if (!ev) return;
     s.evento = ev;
@@ -72,6 +94,7 @@
     const link = $('#ed-link-pubblico');
     if (link && ev.slug) { link.href = urlEdizione(ev.slug); link.textContent = 'Modulo: /' + ev.slug + '/'; }
     aggiornaPostiRiepilogo();
+    aggiornaAperturaHint(ev.motivoChiusura !== undefined ? ev.motivoChiusura : null);
   }
 
   function contaOccupatiLocali() {
@@ -299,8 +322,10 @@
         const i = s.edizioni.findIndex(e => e.slug === s.slug);
         if (i >= 0) s.edizioni[i] = Object.assign({}, s.edizioni[i], r.evento);
       }
-      $('#aperte').checked = !!r.aperte;
+      // Interruttore = stato edizione (aperta/chiusa); aperte/motivoChiusura = se il pubblico può già iscriversi.
+      $('#aperte').checked = !!(s.evento && s.evento.stato === 'aperta');
       aggiornaTestoAperte();
+      aggiornaAperturaHint(r.motivoChiusura);
       s.ultimoOk = new Date();
       impostaLive('ok', 'Aggiornato alle ' + s.ultimoOk.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
       if (nuove.length) annunciaNuove(nuove);
@@ -734,6 +759,7 @@
     $('#ed-quando').value = ed ? ed.quando : '';
     $('#ed-quota').value = ed ? ed.quota : '';
     $('#ed-scadenza').value = ed ? ed.scadenza : '';
+    $('#ed-apertura').value = ed && ed.apertura_il ? String(ed.apertura_il).replace(' ', 'T').slice(0, 16) : '';
     $('#ed-chiusura').value = ed ? (ed.chiusura || '') : '';
     $('#ed-contatto').value = ed ? ed.contatto : '';
     $('#ed-posti').value = ed ? (ed.posti || 0) : 50;
@@ -773,6 +799,7 @@
       quando: $('#ed-quando').value.trim(),
       quota: $('#ed-quota').value.trim(),
       scadenza: $('#ed-scadenza').value.trim(),
+      apertura_il: ($('#ed-apertura').value || '').trim(),
       chiusura: $('#ed-chiusura').value.trim(),
       contatto: $('#ed-contatto').value.trim(),
       posti: Number($('#ed-posti').value) || 0,
