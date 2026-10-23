@@ -556,7 +556,7 @@
     bottone.textContent = 'Invio in corso…';
     try {
       const r = await api('iscrivi', { slug, dati: v });
-      mostraRicevuta(v, r);
+      mostraRicevuta(v, r.codice, r.stato);
     } catch (err) {
       if (err.codice === 'dati_non_validi' && err.dati.campi) {
         const campi = err.dati.campi;
@@ -583,38 +583,24 @@
   });
 
   let ultimiContatti = {};
-  function mostraRicevuta(v, risposta) {
-    const codice = risposta && risposta.codice;
-    const stato = risposta && risposta.stato;
-    let posto = risposta && risposta.posto;
-    if (posto == null && codice) {
-      const m = String(codice).match(/(\d+)\s*$/);
-      posto = m ? Number(m[1]) : null;
-    }
+  function mostraRicevuta(v, codice, stato) {
     ultimiContatti = {};
     CONTATTI.forEach(k => { ultimiContatti[k] = v[k]; });
     memoria.togli(BOZZA);
     $('#ricevuta-nome').textContent = v.nome + ' ' + v.cognome;
     $('#ricevuta-email').textContent = v.email;
-    const etichetta = $('#posto-etichetta');
-    const num = $('#posto-numero');
-    const cod = $('#posto-codice');
-    if (etichetta) {
-      etichetta.textContent = stato === 'lista_attesa'
-        ? 'Numero in lista d’attesa'
-        : 'Numero in lista da gestire';
-    }
-    if (num) num.textContent = posto != null ? String(posto) : '—';
-    if (cod) cod.textContent = codice || '';
+    $('#timbro-codice').textContent = codice;
+    $('#timbro-data').textContent = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const seguito = $('#ricevuta-seguito');
     if (seguito) {
       seguito.textContent = stato === 'lista_attesa'
         ? 'I posti sono al momento esauriti: sei in lista d’attesa. La segreteria ti scriverà se si libera un posto o quando l’iscrizione sarà confermata.'
-        : 'La segreteria controllerà la pratica e ti scriverà quando l’iscrizione sarà confermata. Per ora non devi fare altro.';
+        : 'La segreteria controllerà l’iscrizione e ti scriverà solo quando sarà confermata. Per ora non devi fare altro.';
     }
     modulo.hidden = true;
     const r = $('#ricevuta');
     r.hidden = false;
+    const t = r.querySelector('.timbro'); t.replaceWith(t.cloneNode(true));
     window.scrollTo({ top: 0 });
     r.focus();
   }

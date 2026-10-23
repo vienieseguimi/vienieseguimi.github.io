@@ -397,20 +397,19 @@
   </form>
 
   <section id="ricevuta" class="ricevuta" hidden tabindex="-1" aria-labelledby="ricevuta-titolo">
-    <div class="congratulazioni">
-      <p class="congratulazioni-kicker">Congratulazioni</p>
+    <div class="credenziale">
+      <svg class="timbro" viewBox="0 0 200 200" aria-hidden="true">
+        <defs><path id="giro" d="M100,100 m-72,0 a72,72 0 1,1 144,0 a72,72 0 1,1 -144,0"/></defs>
+        <circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" stroke-width="5"/>
+        <circle cx="100" cy="100" r="56" fill="none" stroke="currentColor" stroke-width="2.5"/>
+        <text font-size="15" font-weight="700" fill="currentColor"><textPath href="#giro" textLength="446" lengthAdjust="spacing">ISCRIZIONE RICEVUTA ✦ PELLEGRINAGGIO ✦</textPath></text>
+        <text x="100" y="93" text-anchor="middle" font-size="14" fill="currentColor" id="timbro-data"></text>
+        <text x="100" y="118" text-anchor="middle" font-size="21" font-weight="700" fill="currentColor" id="timbro-codice"></text>
+      </svg>
       <h2 id="ricevuta-titolo">Iscrizione inviata</h2>
       <p class="ricevuta-nome" id="ricevuta-nome"></p>
-
-      <div class="posto-grande" role="group" aria-labelledby="posto-etichetta">
-        <p class="posto-etichetta" id="posto-etichetta">Numero in lista da gestire</p>
-        <p class="posto-numero" id="posto-numero"></p>
-        <p class="posto-codice">Codice <span id="posto-codice"></span></p>
-      </div>
-
-      <p>Ti arriverà un’email con il <strong>riepilogo</strong> di quanto hai inserito a <strong id="ricevuta-email"></strong>. Se non la trovi, guarda anche nella posta indesiderata.</p>
-      <p class="ricevuta-nota">Quell’email è solo un riepilogo: <strong>non è ancora la conferma</strong> dell’iscrizione.</p>
-      <p id="ricevuta-seguito">La segreteria controllerà la pratica e ti scriverà quando l’iscrizione sarà confermata. Per ora non devi fare altro.</p>
+      <p>Ti abbiamo mandato un’email di <strong>riepilogo</strong> a <strong id="ricevuta-email"></strong> (non è una conferma). Se non la trovi, guarda nella posta indesiderata.</p>
+      <p id="ricevuta-seguito">La segreteria controllerà l’iscrizione e ti scriverà solo quando sarà confermata. Per ora non devi fare altro.</p>
     </div>
     <div class="azioni-ricevuta">
       <button type="button" class="btn" id="altra">Iscrivi un’altra persona</button>

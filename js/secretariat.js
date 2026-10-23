@@ -50,6 +50,7 @@
     documento_eliminato: '{operatore} ha eliminato «{documento}»{slug_suffisso}',
     edizione_salvata: '{operatore} ha salvato il pellegrinaggio «{titolo}»{slug_suffisso}',
     login_ok: '{operatore} ha aperto la segreteria',
+    setup_eseguito: '{operatore} ha eseguito la manutenzione (setup)',
   };
 
   const s = {
@@ -776,6 +777,24 @@
   });
   $('#ed-chiudi').addEventListener('click', () => { $('#pannello-edizioni').hidden = true; });
   $('#ed-nuova').addEventListener('click', () => apriFormEdizione(null));
+  $('#ed-setup').addEventListener('click', async () => {
+    if (!window.confirm('Eseguire la manutenzione (setup)? Allinea fogli, cartelle Drive e trigger. Di solito serve dopo un aggiornamento del sistema.')) return;
+    const btn = $('#ed-setup');
+    btn.disabled = true;
+    const testo = btn.textContent;
+    btn.textContent = 'In corso…';
+    try {
+      const r = await api('setup', { token: s.token });
+      avviso(r.messaggio || 'Manutenzione completata.');
+      caricaAttivita();
+    } catch (err) {
+      if (err.codice === 'non_autorizzato') mostraAccesso(err.message);
+      else avviso(err.message || 'Manutenzione non riuscita.', 'errore');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = testo;
+    }
+  });
   $('#ed-annulla').addEventListener('click', () => { $('#ed-form').hidden = true; });
   $('#ed-lista').addEventListener('click', e => {
     const apri = e.target.closest('.ed-apri');
