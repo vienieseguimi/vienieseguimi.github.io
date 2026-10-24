@@ -308,7 +308,11 @@
     if (!nome || !password) { err.textContent = 'Scrivi il tuo nome e la password.'; err.hidden = false; return; }
     const b = $('#acc-entra'); b.disabled = true; b.textContent = 'Accesso…';
     try {
-      const r = await api('login', { nome, password });
+      const e = cfg.ente || {};
+      const r = await api('login', {
+        nome, password, org_path: e.subdomain || '',
+        ente: { nome: e.nome || '', logoUrl: e.logoUrl || '', email: e.email || '' },
+      });
       memoria.scrivi(NOME, nome);
       memoria.scrivi(SESSIONE, { token: r.token, nome: r.nome, scadenza: r.scadenza }, 'sessione');
       $('#acc-password').value = '';
@@ -1165,7 +1169,7 @@
     const testo = btn.textContent;
     btn.textContent = 'In corso…';
     try {
-      const r = await api('setup', { token: s.token });
+      const r = await api('setup', { token: s.token, org_path: (cfg.ente && cfg.ente.subdomain) || '' });
       avviso(r.messaggio || 'Manutenzione completata.');
       caricaAttivita();
     } catch (err) {

@@ -571,7 +571,8 @@
     if (!v.email) e.email = 'Scrivi l\'indirizzo email';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.email)) e.email = 'L\'email deve essere come nome@esempio.it';
     if (!v.telefono) e.telefono = 'Scrivi un numero di telefono';
-    else if (!/^[+0-9 ()./-]{6,}$/.test(v.telefono)) e.telefono = 'Il numero può contenere solo cifre, spazi e +';
+    else if (!/^[+0-9 ()./-]+$/.test(v.telefono)) e.telefono = 'Il numero può contenere solo cifre, spazi e +';
+    else if (v.telefono.replace(/\D/g, '').length < 6) e.telefono = 'Il numero è troppo corto: controlla di averlo scritto tutto';
     if (!v.indirizzo) e.indirizzo = 'Scrivi via e numero civico';
     if (!v.comune) e.comune = 'Scrivi il comune di residenza';
     const chiediParr = !(evento && evento.verifica_parrocchiani === false);
@@ -598,7 +599,32 @@
     return out;
   }
 
+  let erroriAttuali = {};
+
+  /** Mentre la persona corregge un campo, il suo errore sparisce (anche dal riepilogo in alto). */
+  function togliErroreCampo(campo) {
+    const k = campo.dataset.campo;
+    if (!k || !erroriAttuali[k]) return;
+    delete erroriAttuali[k];
+    campo.classList.remove('errore');
+    const p = campo.querySelector('.messaggio-errore');
+    if (p) p.textContent = '';
+    campo.querySelectorAll('input, textarea, select').forEach(i => i.setAttribute('aria-invalid', 'false'));
+    const box = $('#riepilogo-errori');
+    box.querySelectorAll('li[data-chiave="' + k + '"]').forEach(li => li.remove());
+    if (!Object.keys(erroriAttuali).length) box.hidden = true;
+  }
+  modulo.addEventListener('input', ev => {
+    const campo = ev.target.closest && ev.target.closest('[data-campo]');
+    if (campo) togliErroreCampo(campo);
+  });
+  modulo.addEventListener('change', ev => {
+    const campo = ev.target.closest && ev.target.closest('[data-campo]');
+    if (campo) togliErroreCampo(campo);
+  });
+
   function mostraErrori(errori) {
+    erroriAttuali = Object.assign({}, errori);
     modulo.querySelectorAll('[data-campo]').forEach(c => {
       const msg = errori[c.dataset.campo];
       c.classList.toggle('errore', !!msg);
@@ -614,6 +640,7 @@
     box.querySelector('ul').innerHTML = '';
     chiavi.forEach(k => {
       const li = document.createElement('li');
+      li.dataset.chiave = k;
       const a = document.createElement('a');
       a.href = '#';
       a.textContent = (ETICHETTE[k] || k) + ': ' + errori[k];
