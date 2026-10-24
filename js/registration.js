@@ -2,6 +2,8 @@
   const { api, memoria, slugDaUrl, urlEdizione, urlHome } = window.Pell;
   const { risolviTenant, platformApi, urlEnte } = window.PellTenant;
   const cfg = window.PELLEGRINAGGIO;
+  // Percorso pubblico dell'ente (es. demo-vanzago): il backend lo usa per i link nelle email e nella ricevuta.
+  const pathEnte = () => (cfg.ente && cfg.ente.subdomain) || '';
   const $ = s => document.querySelector(s);
   const $$ = s => Array.from(document.querySelectorAll(s));
 
@@ -180,7 +182,7 @@
     $('#pagina-iscrizione-corpo').hidden = true;
 
     try {
-      const r = await api('iscrizione', { slug, uuid }, { timeoutMs: 20000 });
+      const r = await api('iscrizione', { slug, uuid, org_path: pathEnte() }, { timeoutMs: 20000 });
       const isc = r.iscrizione || {};
       const ev = r.evento || {};
       $('#pagina-iscrizione-caricamento').hidden = true;
@@ -733,7 +735,7 @@
     bottone.disabled = true;
     bottone.textContent = 'Invio in corso…';
     try {
-      const r = await api('iscrivi', { slug, dati: v });
+      const r = await api('iscrivi', { slug, dati: v, org_path: pathEnte() });
       mostraRicevuta(v, r);
     } catch (err) {
       if (err.codice === 'dati_non_validi' && err.dati.campi) {
