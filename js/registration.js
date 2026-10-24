@@ -148,7 +148,9 @@
   // ---- Modulo edizione
   $('#vista-modulo').hidden = false;
   const home = urlHome();
-  ['#link-altre', '#link-home-mancante', '#link-home-testata', '#link-brand-modulo', '#pagina-iscrizione-torna'].forEach(s => {
+  document.querySelectorAll('[data-piede-pellegrinaggi]').forEach(b => { b.hidden = false; });
+  document.querySelectorAll('[data-link-pellegrinaggi]').forEach(a => { a.href = home; });
+  ['#link-altre', '#link-home-mancante', '#link-brand-modulo', '#pagina-iscrizione-torna'].forEach(s => {
     const a = $(s); if (a) a.href = home;
   });
   if (cfg.ente && cfg.ente.nome) {
