@@ -362,6 +362,7 @@
     const quota = typeof p.quota === 'number' ? p.quota : null;
     $('#posta-quota').textContent = quota == null ? '—' : String(quota);
     $('#posta-coda').textContent = String(p.inCoda || 0);
+    $('#posta-inviate').textContent = p.inviateOggi == null ? '—' : String(p.inviateOggi);
     const chip = $('#posta-chip');
     if (quota != null) {
       chip.textContent = 'Email oggi: ' + quota + (p.inCoda ? ' · in coda ' + p.inCoda : '');
@@ -383,6 +384,7 @@
     try {
       const r = await api('posta_stato', { token: s.token });
       s.posta.quota = r.quota; s.posta.inCoda = r.inCoda || 0;
+      s.posta.inviateOggi = r.inviateOggi;
       renderStatoPosta();
     } catch (err) {
       if (err.codice === 'non_autorizzato') return mostraAccesso(err.message);
@@ -394,6 +396,7 @@
   function postaNonAttiva() {
     $('#posta-quota').textContent = '—';
     $('#posta-coda').textContent = '—';
+    $('#posta-inviate').textContent = '—';
     const nota = $('#posta-nota');
     nota.textContent = 'La posta non è ancora attiva per questa parrocchia: il servizio va aggiornato.';
     nota.hidden = false;
@@ -428,12 +431,16 @@
   async function caricaPosta() {
     const lista = $('#posta-lista');
     lista.setAttribute('aria-busy', 'true');
+    $('#posta-vuota').textContent = 'Caricamento…';
+    $('#posta-vuota').hidden = false;
     try {
       const r = await api('posta_elenco', {
         token: s.token, slug: $('#posta-ed').value, cerca: $('#posta-cerca').value.trim(), limite: 200,
       });
       s.posta.email = r.email || [];
       s.posta.quota = r.quota; s.posta.inCoda = r.inCoda || 0;
+      s.posta.inviateOggi = r.inviateOggi;
+      $('#posta-vuota').textContent = 'Nessuna email.';
       renderPosta();
       renderStatoPosta();
     } catch (err) {
@@ -508,6 +515,17 @@
       s.edizioni.map(e => `<option value="${esc(e.slug)}">${esc(e.titolo || e.slug)}</option>`).join('');
     sel.value = attuale;
     chiudiEmail();
+    recuperaPostaPoi();
+  }
+
+  /** Aggiunge alla posta le ricevute del periodo che il registro non conosceva, poi carica l'elenco. */
+  async function recuperaPostaPoi() {
+    try {
+      await api('posta_recupera', { token: s.token });
+    } catch (err) {
+      if (err.codice === 'non_autorizzato') return mostraAccesso(err.message);
+      // se non c'è ancora l'azione, la posta si carica lo stesso
+    }
     caricaPosta();
   }
 
