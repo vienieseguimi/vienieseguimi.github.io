@@ -481,9 +481,18 @@
   function renderStatoPosta() {
     const p = s.posta;
     const quota = typeof p.quota === 'number' ? p.quota : null;
-    $('#posta-quota').textContent = quota == null ? '—' : String(quota);
-    $('#posta-coda').textContent = String(p.inCoda || 0);
-    $('#posta-inviate').textContent = p.inviateOggi == null ? '—' : String(p.inviateOggi);
+    const quotaTxt = quota == null ? '—' : String(quota);
+    const codaTxt = String(p.inCoda || 0);
+    const inviateTxt = p.inviateOggi == null ? '—' : String(p.inviateOggi);
+    $('#posta-quota').textContent = quotaTxt;
+    $('#posta-coda').textContent = codaTxt;
+    $('#posta-inviate').textContent = inviateTxt;
+    const vq = $('#posta-vista-quota');
+    const vc = $('#posta-vista-coda');
+    const vi = $('#posta-vista-inviate');
+    if (vq) vq.textContent = quotaTxt;
+    if (vc) vc.textContent = codaTxt;
+    if (vi) vi.textContent = inviateTxt;
     const chip = $('#posta-chip');
     if (quota != null) {
       chip.textContent = 'Email oggi: ' + quota + (p.inCoda ? ' · in coda ' + p.inCoda : '');
@@ -515,9 +524,16 @@
 
   /** Backend della parrocchia non ancora aggiornato: niente trattini muti, un messaggio chiaro. */
   function postaNonAttiva() {
+    s.posta.quota = null; s.posta.inCoda = 0; s.posta.inviateOggi = null;
     $('#posta-quota').textContent = '—';
     $('#posta-coda').textContent = '—';
     $('#posta-inviate').textContent = '—';
+    const vq = $('#posta-vista-quota');
+    const vc = $('#posta-vista-coda');
+    const vi = $('#posta-vista-inviate');
+    if (vq) vq.textContent = '—';
+    if (vc) vc.textContent = '—';
+    if (vi) vi.textContent = '—';
     const nota = $('#posta-nota');
     nota.textContent = 'La posta non è ancora attiva per questa parrocchia: il servizio va aggiornato.';
     nota.hidden = false;
@@ -525,11 +541,21 @@
     $('#posta-chip').hidden = true;
   }
 
+  function classeBordoEsito(esito) {
+    if (esito === 'inviata') return '';
+    if (/^errore/.test(esito)) return ' esito-errore';
+    return ' esito-coda';
+  }
+
   function rigaPostaHtml(e) {
     const scelta = s.posta.scelta === e.id;
-    return `<li><button type="button" class="posta-voce${scelta ? ' scelta' : ''}" data-email="${esc(e.id)}" aria-current="${scelta}">
-      <span class="posta-voce-chi">${esc(e.nome || e.destinatario)}</span>
+    const chi = e.nome || e.destinatario;
+    const dest = e.nome && e.destinatario && e.nome !== e.destinatario
+      ? `<span class="posta-voce-dest">${esc(e.destinatario)}</span>` : '';
+    return `<li><button type="button" class="posta-voce${scelta ? ' scelta' : ''}${classeBordoEsito(e.esito)}" data-email="${esc(e.id)}" aria-current="${scelta}">
+      <span class="posta-voce-chi">${esc(chi)}</span>
       <span class="posta-voce-quando">${esc(quando(e.creato_il))}</span>
+      ${dest}
       <span class="posta-voce-oggetto">${esc(e.oggetto)}</span>
       <span class="posta-voce-pillole">
         <span class="pillola ${classeEsito(e.esito)}">${esc(testoEsito(e.esito))}</span>
@@ -538,15 +564,30 @@
     </button></li>`;
   }
 
+  function messaggioPostaVuota() {
+    const cerca = $('#posta-cerca').value.trim();
+    const slug = $('#posta-ed').value;
+    if (cerca || slug) return 'Nessuna email corrisponde ai filtri.';
+    return 'Nessuna email inviata ancora.';
+  }
+
   function renderPosta() {
     const lista = s.posta.email;
     $('#posta-lista').innerHTML = lista.map(rigaPostaHtml).join('');
-    $('#posta-vuota').hidden = lista.length > 0;
+    const vuota = $('#posta-vuota');
+    vuota.hidden = lista.length > 0;
+    if (lista.length === 0) vuota.textContent = messaggioPostaVuota();
     const inviate = lista.filter(e => e.esito === 'inviata').length;
-    $('#posta-riepilogo').textContent = lista.length
-      ? (lista.length + ' email · ' + inviate + (inviate === 1 ? ' inviata' : ' inviate') +
-        (typeof s.posta.quota === 'number' ? ' · puoi inviarne ancora ' + s.posta.quota + ' oggi' : ''))
-      : '';
+    const coda = lista.filter(e => e.esito !== 'inviata' && !/^errore/.test(e.esito)).length;
+    const errori = lista.filter(e => /^errore/.test(e.esito)).length;
+    let riep = '';
+    if (lista.length) {
+      riep = lista.length + (lista.length === 1 ? ' email' : ' email');
+      riep += ' · ' + inviate + (inviate === 1 ? ' inviata' : ' inviate');
+      if (coda) riep += ' · ' + coda + (coda === 1 ? ' in coda' : ' in coda');
+      if (errori) riep += ' · ' + errori + (errori === 1 ? ' con errore' : ' con errore');
+    }
+    $('#posta-riepilogo').textContent = riep;
   }
 
   async function caricaPosta() {
@@ -561,9 +602,9 @@
       s.posta.email = r.email || [];
       s.posta.quota = r.quota; s.posta.inCoda = r.inCoda || 0;
       s.posta.inviateOggi = r.inviateOggi;
-      $('#posta-vuota').textContent = 'Nessuna email.';
       renderPosta();
       renderStatoPosta();
+      if (s.posta.scelta && !s.posta.email.some(e => e.id === s.posta.scelta)) chiudiEmail();
     } catch (err) {
       if (err.codice === 'non_autorizzato') return mostraAccesso(err.message);
       if (err.codice === 'azione_sconosciuta') {
@@ -579,6 +620,34 @@
     }
   }
 
+  function riempiMetaPosta(e) {
+    $('#posta-oggetto').textContent = e.oggetto || '(senza oggetto)';
+    const esito = $('#posta-esito');
+    esito.textContent = testoEsito(e.esito);
+    esito.className = 'pillola ' + classeEsito(e.esito);
+    esito.hidden = false;
+    $('#posta-meta-a').textContent = e.nome
+      ? (e.nome + (e.destinatario ? ' · ' + e.destinatario : ''))
+      : (e.destinatario || '—');
+    const d = new Date(e.creato_il);
+    $('#posta-meta-quando').textContent = isNaN(d)
+      ? '—'
+      : d.toLocaleString('it-IT', { dateStyle: 'medium', timeStyle: 'short' });
+    $('#posta-meta-tipo').textContent =
+      (TIPO_EMAIL[e.tipo] || e.tipo || '—') + (e.codice ? ' · ' + e.codice : '');
+    const err = $('#posta-meta-errore');
+    if (/^errore/.test(e.esito) && e.esito !== 'errore') {
+      err.textContent = e.esito.replace(/^errore[:\s]*/i, '') || 'Invio non riuscito.';
+      err.hidden = false;
+    } else if (/^errore/.test(e.esito)) {
+      err.textContent = 'Invio non riuscito: verrà riprovato automaticamente.';
+      err.hidden = false;
+    } else {
+      err.hidden = true;
+      err.textContent = '';
+    }
+  }
+
   async function apriEmail(id) {
     s.posta.scelta = id;
     renderPosta();
@@ -586,22 +655,23 @@
     if (!e) return;
     $('#posta-caselle').classList.add('con-lettura');
     $('#posta-lettura-testa').hidden = false;
-    $('#posta-oggetto').textContent = e.oggetto;
-    $('#posta-meta').textContent = 'A ' + (e.nome ? e.nome + ' <' + e.destinatario + '>' : e.destinatario) +
-      ' · ' + new Date(e.creato_il).toLocaleString('it-IT', { dateStyle: 'medium', timeStyle: 'short' }) +
-      ' · ' + testoEsito(e.esito);
+    riempiMetaPosta(e);
     $('#posta-scegli').hidden = true;
+    const foglio = $('#posta-foglio');
     const frame = $('#posta-anteprima');
+    foglio.hidden = false;
+    frame.srcdoc = '<p style="font-family:sans-serif;color:#545d72;padding:1.5rem">Caricamento…</p>';
     try {
       const r = await api('posta_email', { token: s.token, id });
       if (s.posta.scelta !== id) return;
-      const html = r.email.html || '<p style="font-family:sans-serif;color:#545d72">Anteprima non disponibile per questa email.</p>';
+      if (r.email) riempiMetaPosta(Object.assign({}, e, r.email));
+      const html = (r.email && r.email.html) ||
+        '<p style="font-family:sans-serif;color:#545d72;padding:1.5rem">Anteprima non disponibile per questa email.</p>';
       // I link dell'email si aprono in una nuova scheda; niente script (sandbox).
       frame.srcdoc = html.replace(/<head>/i, '<head><base target="_blank">');
-      frame.hidden = false;
     } catch (err) {
       if (err.codice === 'non_autorizzato') return mostraAccesso(err.message);
-      frame.hidden = true;
+      foglio.hidden = true;
       avviso(err.message || 'Impossibile aprire l’email.', 'errore');
     }
   }
@@ -610,8 +680,11 @@
     s.posta.scelta = null;
     $('#posta-caselle').classList.remove('con-lettura');
     $('#posta-lettura-testa').hidden = true;
-    $('#posta-anteprima').hidden = true;
+    $('#posta-foglio').hidden = true;
+    $('#posta-anteprima').srcdoc = '';
     $('#posta-scegli').hidden = false;
+    $('#posta-esito').hidden = true;
+    $('#posta-meta-errore').hidden = true;
     renderPosta();
   }
 
