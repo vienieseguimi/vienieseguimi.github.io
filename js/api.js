@@ -12,8 +12,19 @@
     }
   }
 
+  /** Ricarica la pagina per prendere la versione nuova; evita cicli con una pausa di 60 secondi. */
+  function ricaricaPerAggiornamento() {
+    try {
+      const ultimo = Number(sessionStorage.getItem('pell-ricarica-ts') || 0);
+      if (Date.now() - ultimo < 60000) return;
+      sessionStorage.setItem('pell-ricarica-ts', String(Date.now()));
+    } catch (e) { /* storage non disponibile: ricarica comunque una volta */ }
+    location.reload();
+  }
+
   async function api(azione, payload, opzioni) {
     const timeoutMs = (opzioni && opzioni.timeoutMs) || 30000;
+    const versione = (window.PELLEGRINAGGIO && window.PELLEGRINAGGIO.version) || '';
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeoutMs);
     let risposta;
@@ -21,7 +32,7 @@
       const res = await fetch(window.PELLEGRINAGGIO.apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(Object.assign({ azione }, payload)),
+        body: JSON.stringify(Object.assign({ azione, versione }, payload)),
         signal: ctrl.signal,
         redirect: 'follow',
       });
@@ -34,6 +45,7 @@
     }
     if (!risposta || risposta.ok !== true) {
       const r = risposta || {};
+      if (r.errore === 'versione_vecchia') ricaricaPerAggiornamento();
       throw new ErroreApi(r.errore || 'sconosciuto', r.messaggio || 'Errore imprevisto.', r);
     }
     return risposta;
