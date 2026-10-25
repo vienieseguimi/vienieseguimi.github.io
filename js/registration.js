@@ -168,6 +168,64 @@
     annullata: 'Annullata',
   };
 
+  function apriConfermaAnnullo(vero) {
+    $('#pagina-iscrizione-annulla-apri').hidden = vero;
+    $('#pagina-iscrizione-annulla-conferma').hidden = !vero;
+    $('#pagina-iscrizione-annulla-esito').hidden = true;
+  }
+
+  async function annullaIscrizione() {
+    const si = $('#pagina-iscrizione-annulla-si');
+    si.disabled = true;
+    try {
+      await api('annulla_iscrizione', { slug, uuid: uuidIscrizione, org_path: pathEnte() }, { timeoutMs: 20000 });
+      await mostraPaginaIscrizione(uuidIscrizione);
+      const ok = $('#pagina-iscrizione-annulla-esito');
+      ok.textContent = 'Iscrizione annullata. Ti abbiamo inviato un’email di conferma.';
+      ok.className = 'aiuto';
+      ok.hidden = false;
+    } catch (err) {
+      const ko = $('#pagina-iscrizione-annulla-esito');
+      ko.textContent = err.message || 'Non è stato possibile annullare l’iscrizione. Riprova.';
+      ko.className = 'msg-errore';
+      ko.hidden = false;
+    } finally {
+      si.disabled = false;
+    }
+  }
+
+  async function riattivaIscrizione() {
+    const btn = $('#pagina-iscrizione-riattiva');
+    btn.disabled = true;
+    try {
+      const r = await api('riattiva_iscrizione', { slug, uuid: uuidIscrizione, org_path: pathEnte() }, { timeoutMs: 20000 });
+      await mostraPaginaIscrizione(uuidIscrizione);
+      const ok = $('#pagina-iscrizione-annulla-esito');
+      ok.textContent = r.stato === 'in_attesa'
+        ? 'Iscrizione riattivata. Ti abbiamo inviato un’email di conferma.'
+        : 'Non ci sono più posti liberi: sei stato inserito in lista d’attesa. Ti abbiamo scritto.';
+      ok.className = 'aiuto';
+      ok.hidden = false;
+    } catch (err) {
+      const ko = $('#pagina-iscrizione-annulla-esito');
+      ko.textContent = err.message || 'Non è stato possibile riattivare l’iscrizione. Riprova.';
+      ko.className = 'msg-errore';
+      ko.hidden = false;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  const btnRiattiva = $('#pagina-iscrizione-riattiva');
+  if (btnRiattiva) btnRiattiva.addEventListener('click', riattivaIscrizione);
+
+  const btnAnnullaApri = $('#pagina-iscrizione-annulla-apri');
+  if (btnAnnullaApri) {
+    btnAnnullaApri.addEventListener('click', () => apriConfermaAnnullo(true));
+    $('#pagina-iscrizione-annulla-no').addEventListener('click', () => apriConfermaAnnullo(false));
+    $('#pagina-iscrizione-annulla-si').addEventListener('click', annullaIscrizione);
+  }
+
   async function mostraPaginaIscrizione(uuid) {
     const pag = $('#pagina-iscrizione');
     const form = $('#modulo');
@@ -239,6 +297,16 @@
         boxDocs.hidden = true;
         lista.innerHTML = '';
       }
+      const boxAnnulla = $('#pagina-iscrizione-annulla-box');
+      if (boxAnnulla) {
+        boxAnnulla.hidden = !isc.puoiAnnullare;
+        $('#pagina-iscrizione-annulla-conferma').hidden = true;
+        $('#pagina-iscrizione-annulla-apri').hidden = false;
+        $('#pagina-iscrizione-annulla-piu').textContent = partecipanti.length > 1 ? ' per entrambe le persone' : '';
+        $('#pagina-iscrizione-annulla-esito').hidden = true;
+      }
+      const boxRiattiva = $('#pagina-iscrizione-riattiva-box');
+      if (boxRiattiva) boxRiattiva.hidden = !isc.puoiRiattivare;
       document.title = (isc.codice ? isc.codice + ' · ' : '') +
         (ev.titolo || 'Iscrizione') + ' · Vieni e seguimi';
       pag.focus();

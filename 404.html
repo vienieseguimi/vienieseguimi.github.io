@@ -465,6 +465,21 @@
         <p class="aiuto" id="pagina-iscrizione-motivo" hidden></p>
         <p class="aiuto" id="pagina-iscrizione-contatto"></p>
       </div>
+      <div id="pagina-iscrizione-annulla-box" class="pagina-iscrizione-annulla" style="margin-top:1.2rem" hidden>
+        <button type="button" class="btn btn-secondario" id="pagina-iscrizione-annulla-apri">Annulla iscrizione</button>
+        <div id="pagina-iscrizione-annulla-conferma" style="margin-top:.8rem" hidden>
+          <p><strong>Vuoi annullare l’iscrizione?</strong> Perderai il posto<span id="pagina-iscrizione-annulla-piu"></span>. Potrai riattivarla più avanti, ma se non ci saranno più posti liberi finirai in lista d’attesa.</p>
+          <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.6rem">
+            <button type="button" class="btn" id="pagina-iscrizione-annulla-si">Sì, annulla l’iscrizione</button>
+            <button type="button" class="btn btn-secondario" id="pagina-iscrizione-annulla-no">No, torna indietro</button>
+          </div>
+        </div>
+      </div>
+      <div id="pagina-iscrizione-riattiva-box" class="pagina-iscrizione-annulla" style="margin-top:1.2rem" hidden>
+        <p class="aiuto">Questa iscrizione è annullata. Se la riattivi e ci sono posti liberi torni subito in gioco; altrimenti andrai in lista d’attesa.</p>
+        <button type="button" class="btn" id="pagina-iscrizione-riattiva">Riattiva iscrizione</button>
+      </div>
+      <p class="aiuto" id="pagina-iscrizione-annulla-esito" role="status" hidden></p>
       <div id="pagina-iscrizione-documenti-box" class="pagina-iscrizione-docs" hidden>
         <h3>Documenti</h3>
         <p class="aiuto">Puoi scaricarli di nuovo quando ti serve.</p>
