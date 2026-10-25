@@ -52,7 +52,7 @@
   };
 
   const s = {
-    token: null, nome: '',
+    token: null, nome: '', utente: '', ruolo: '',
     vista: 'home', // 'home' | 'gestione' | 'posta'
     slug: '', edizioni: [], evento: null,
     versione: 0, caricato: false, righe: new Map(),
@@ -310,7 +310,7 @@
     try {
       const e = cfg.ente || {};
       const r = await api('login', {
-        nome, password, org_path: e.subdomain || '',
+        utente: nome, password, org_path: e.subdomain || '',
         ente: { nome: e.nome || '', logoUrl: e.logoUrl || '', email: e.email || '' },
       });
       memoria.scrivi(NOME, nome);
@@ -325,10 +325,23 @@
 
   $('#esci').addEventListener('click', () => mostraAccesso());
 
+  /** Legge utente e ruolo dal token (solo lettura: la verifica resta nel backend). */
+  function infoToken(token) {
+    try {
+      const b64 = String(token || '').split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
+      const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      return JSON.parse(new TextDecoder().decode(bytes)) || {};
+    } catch (e) { return {}; }
+  }
+
   async function entra(token, nome) {
     s.token = token; s.nome = nome;
+    const info = infoToken(token);
+    s.utente = info.u || 'admin';
+    s.ruolo = info.r || 'admin';
     s.versione = 0; s.caricato = false; s.righe.clear();
     $('#utente-nome').textContent = nome;
+    aggiornaBoxAccount();
     $('#vista-accesso').hidden = true;
     $('#vista-app').hidden = false;
     try {
@@ -342,6 +355,114 @@
   }
 
   $('#torna-home').addEventListener('click', () => mostraHome());
+
+  // ================= Account e password =================
+  function avvisoAccount(testo, errore) {
+    const el = $('#account-io');
+    el.textContent = testo || '';
+    el.hidden = !testo;
+    el.classList.toggle('msg-errore', !!errore);
+  }
+
+  function aggiornaBoxAccount() {
+    $('#account-box').hidden = false;
+    const admin = s.ruolo === 'admin';
+    $('#account-amministrazione').hidden = !admin;
+    if (admin) caricaAccount();
+  }
+
+  async function caricaAccount() {
+    try {
+      const r = await api('account_elenco', { token: s.token });
+      renderAccount(r.account);
+    } catch (ex) {
+      avvisoAccount(ex.message, true);
+    }
+  }
+
+  function renderAccount(lista) {
+    $('#account-lista').innerHTML = (lista || []).map(a => {
+      const fisso = a.utente === 'admin';
+      const stato = a.attivo ? 'attivo' : 'disattivato';
+      const azioni = fisso ? '<span class="aiuto">Password dell’amministratore: nelle proprietà dello script.</span>' : `
+        <div class="account-azioni">
+          <button type="button" class="btn btn-secondario btn-piccolo" data-azione="reset" data-utente="${esc(a.utente)}">Nuova password</button>
+          <button type="button" class="btn btn-secondario btn-piccolo" data-azione="attiva" data-utente="${esc(a.utente)}" data-attivo="${a.attivo ? 'true' : 'false'}">${a.attivo ? 'Disattiva' : 'Riattiva'}</button>
+        </div>
+        <form class="account-reset" data-utente="${esc(a.utente)}" hidden autocomplete="off">
+          <input type="password" minlength="10" maxlength="200" autocomplete="new-password" placeholder="Nuova password (min. 10)" aria-label="Nuova password per ${esc(a.utente)}" required>
+          <button type="submit" class="btn btn-piccolo">Imposta</button>
+        </form>`;
+      return `<li class="account-riga">
+        <div><strong>${esc(a.nome)}</strong> <span class="aiuto">${esc(a.utente)} · ${a.ruolo === 'admin' ? 'amministratore' : 'segreteria'} · ${stato}</span></div>
+        ${azioni}
+      </li>`;
+    }).join('');
+  }
+
+  async function modificaAccount(utente, extra) {
+    try {
+      const r = await api('account_aggiorna', Object.assign({ token: s.token, utente }, extra));
+      renderAccount(r.account);
+      avvisoAccount('Salvato.', false);
+    } catch (ex) {
+      avvisoAccount(ex.message, true);
+    }
+  }
+
+  $('#account-lista').addEventListener('click', e => {
+    const b = e.target.closest('[data-azione]');
+    if (!b) return;
+    const u = b.dataset.utente;
+    if (b.dataset.azione === 'attiva') modificaAccount(u, { attivo: b.dataset.attivo !== 'true' });
+    if (b.dataset.azione === 'reset') {
+      const f = b.closest('li').querySelector('.account-reset');
+      f.hidden = !f.hidden;
+      if (!f.hidden) f.querySelector('input').focus();
+    }
+  });
+
+  $('#account-lista').addEventListener('submit', e => {
+    const f = e.target;
+    if (!f.classList.contains('account-reset')) return;
+    e.preventDefault();
+    modificaAccount(f.dataset.utente, { password: f.querySelector('input').value });
+  });
+
+  $('#form-nuovo-account').addEventListener('submit', async e => {
+    e.preventDefault();
+    try {
+      const r = await api('account_crea', {
+        token: s.token,
+        utente: $('#na-utente').value.trim(),
+        nome: $('#na-nome').value.trim(),
+        password: $('#na-password').value,
+        ruolo: $('#na-ruolo').value,
+      });
+      renderAccount(r.account);
+      e.target.reset();
+      avvisoAccount('Account creato. Passa la password alla persona.', false);
+    } catch (ex) {
+      avvisoAccount(ex.message, true);
+    }
+  });
+
+  $('#form-mia-password').addEventListener('submit', async e => {
+    e.preventDefault();
+    try {
+      const r = await api('account_cambia_password', {
+        token: s.token,
+        password_attuale: $('#pw-attuale').value,
+        password_nuova: $('#pw-nuova').value,
+      });
+      s.token = r.token;
+      memoria.scrivi(SESSIONE, { token: r.token, nome: s.nome, scadenza: r.scadenza }, 'sessione');
+      e.target.reset();
+      avvisoAccount('Password cambiata.', false);
+    } catch (ex) {
+      avvisoAccount(ex.message, true);
+    }
+  });
 
   // ================= Posta =================
   const TIPO_EMAIL = { ricevuta: 'Ricevuta', confermata: 'Conferma', rifiutata: 'Non confermata' };
