@@ -176,7 +176,14 @@
 
   async function annullaIscrizione() {
     const si = $('#pagina-iscrizione-annulla-si');
-    si.disabled = true;
+    const no = $('#pagina-iscrizione-annulla-no');
+    const etichetta = si.textContent;
+    si.disabled = true; no.disabled = true;
+    si.textContent = 'Attendere…';
+    const attesa = $('#pagina-iscrizione-annulla-esito');
+    attesa.textContent = 'Sto annullando l’iscrizione: può richiedere qualche secondo.';
+    attesa.className = 'aiuto';
+    attesa.hidden = false;
     try {
       await api('annulla_iscrizione', { slug, uuid: uuidIscrizione, org_path: pathEnte() }, { timeoutMs: 20000 });
       await mostraPaginaIscrizione(uuidIscrizione);
@@ -190,13 +197,20 @@
       ko.className = 'msg-errore';
       ko.hidden = false;
     } finally {
-      si.disabled = false;
+      si.disabled = false; no.disabled = false;
+      si.textContent = etichetta;
     }
   }
 
   async function riattivaIscrizione() {
     const btn = $('#pagina-iscrizione-riattiva');
+    const etichetta = btn.textContent;
     btn.disabled = true;
+    btn.textContent = 'Attendere…';
+    const attesa = $('#pagina-iscrizione-annulla-esito');
+    attesa.textContent = 'Sto riattivando l’iscrizione: può richiedere qualche secondo.';
+    attesa.className = 'aiuto';
+    attesa.hidden = false;
     try {
       const r = await api('riattiva_iscrizione', { slug, uuid: uuidIscrizione, org_path: pathEnte() }, { timeoutMs: 20000 });
       await mostraPaginaIscrizione(uuidIscrizione);
@@ -213,6 +227,7 @@
       ko.hidden = false;
     } finally {
       btn.disabled = false;
+      btn.textContent = etichetta;
     }
   }
 
